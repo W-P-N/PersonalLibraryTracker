@@ -16,14 +16,14 @@ public class Book {
     private String author;
     private String totalPages;
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name="reading_session_id", unique = true)
+    @JoinColumn(name="book_id", unique = true)
     private List<ReadingSession> readingSessions;
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name="note_id", unique = true)
+    @JoinColumn(name="book_id", unique = true)
     private List<Note> notes;
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="review_id", unique = true)
-    private List<Review> review;
+    @JoinColumn(name="book_id", unique = true)
+    private Review review;
 
     @Override
     public boolean equals(Object o) {

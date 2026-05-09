@@ -18,3 +18,4 @@ public class ReadingSession {
     private Integer endSessionPageNumber;
     private Integer pagesReadInSession;
 }
+    
