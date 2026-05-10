@@ -2,11 +2,22 @@ DROP DATABASE IF EXISTS libarary_tracker;
 CREATE DATABASE library_tracker;
 USE library_tracker;
 
+CREATE TABLE User(
+     user_id INT AUTO_INCREMENT PRIMARY KEY,
+     user_name VARCHAR(50),
+     email VARCHAR(40) NOT NULL,
+     password VARCHAR (30) NOT NULL
+);
+
 CREATE TABLE Book(
-     book_id INT PRIMARY KEY auto_increment,
-     title VARCHAR(52) NOT NULL,
-     author VARCHAR(50),
-     total_pages INT NOT NULL
+    book_id INT PRIMARY KEY auto_increment,
+    title VARCHAR(52) NOT NULL,
+    author VARCHAR(50),
+    total_pages INT NOT NULL,
+    user_id INT,
+    FOREIGN KEY (user_id)
+        REFERENCES User(user_id)
+        ON DELETE CASCADE
 );
 
 
@@ -45,7 +56,13 @@ CREATE TABLE Note(
         ON DELETE CASCADE
 );
 
-INSERT INTO Book(title, author, total_pages)
+INSERT INTO User(user_name, email, password)
 VALUES
-    ("The Kite Runner", "M Hosselini", 300),
-    ("The Wings Of Freedom", "Abdul Kalam", 209);
+    ("test1", "test1@mail.com", "test1password"),
+    ("test2", "test2@mail.com", "test2password");
+
+INSERT INTO Book(title, author, total_pages, user_id)
+VALUES
+    ("The Kite Runner", "M Hosselini", 300, 1),
+    ("The Wings Of Freedom", "Abdul Kalam", 209, 1),
+    ("The 5 AM club", "Robin Sharma", 452, 2);
