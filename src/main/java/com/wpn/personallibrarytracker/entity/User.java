@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -15,7 +16,7 @@ public class User {
     private String password;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
-    private Book book;
+    private List<Book> books;
 
     @Override
     public boolean equals(Object o) {
