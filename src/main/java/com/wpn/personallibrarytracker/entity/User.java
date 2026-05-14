@@ -15,7 +15,7 @@ public class User {
     private String password;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
-    private Book bookId;
+    private Book book;
 
     @Override
     public boolean equals(Object o) {
