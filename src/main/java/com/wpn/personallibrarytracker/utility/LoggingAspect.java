@@ -15,18 +15,18 @@ public class LoggingAspect {
     public Object aroundLogging(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
-        LOGGER.info("Entering: " + className + " - " + methodName);
+        LOGGER.info("Entering: {} - {}", className, methodName);
         Object result;
         long start = System.nanoTime();
         try {
             result = joinPoint.proceed();
             long duration = (System.nanoTime() - start) / 1_000_000;
-            LOGGER.info("Execution Time: " + duration);
+            LOGGER.info("Execution Time: {}", duration);
         } catch(Throwable throwable) {
             LOGGER.error(throwable.getMessage());
             throw throwable;
         }
-        LOGGER.info("Exiting: " + className + " - " + methodName);
+        LOGGER.info("Exiting: {} - {}", className, methodName);
         return result;
     }
 }
