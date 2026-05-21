@@ -20,7 +20,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({UserAlreadyExistsException.class, UserNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleUserExceptions(RuntimeException exception) {
         ErrorResponse errorResponse = null;
-        if(exception instanceof UserAlreadyExistsException) {
+        if(exception instanceof UserNotFoundException) {
             errorResponse = new ErrorResponse(
                     exception.getMessage(),
                     HttpStatus.NOT_FOUND.value()
