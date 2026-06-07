@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.service;
 import com.wpn.personallibrarytracker.dto.UserRequestDTO;
 import com.wpn.personallibrarytracker.dto.UserResponseDTO;
 import com.wpn.personallibrarytracker.entity.User;
+import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -60,5 +61,29 @@ public class UserServiceImplTest {
         Assertions.assertEquals(userResponseDTO, newUser);
         Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any(User.class));
         Mockito.verify(userRepository, Mockito.times(1)).findByEmail(Mockito.anyString());
+    }
+
+    @Test
+    void postUserDetails_shouldThrowUserAlreadyExistsException_whenEmailExists() {
+        // Arrange
+        User user = new User();
+        user.setUserName("test");
+        user.setEmail("test@mail.com");
+        user.setPassword("testpassword");
+
+        Optional<User> userOptional = Optional.of(user);
+
+        Mockito.when(userRepository.findByEmail(Mockito.anyString()))
+                .thenReturn(userOptional);
+
+        UserRequestDTO userRequestDTO = new UserRequestDTO(
+                "test",
+                "test@mail.com",
+                "testpassword"
+        );
+        // Act and Assert
+        Assertions.assertThrows(UserAlreadyExistsException.class, () -> {
+            userService.postUserDetails(userRequestDTO);
+        });
     }
 }
