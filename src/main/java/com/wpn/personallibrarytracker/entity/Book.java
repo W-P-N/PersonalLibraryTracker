@@ -14,15 +14,15 @@ public class Book {
     private Integer bookId;
     private String title;
     private String author;
-    private String totalPages;
+    private Integer totalPages;
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name="book_id", unique = true)
+    @JoinColumn(name="book_id")
     private List<ReadingSession> readingSessions;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name="book_id", unique = true)
     private List<Note> notes;
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="book_id", unique = true)
+    @JoinColumn(name="review_id", unique = true)
     private Review review;
 
     @Override
