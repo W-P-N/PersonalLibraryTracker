@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDTO postUserDetails(UserRequestDTO userRequestDTO) throws UserAlreadyExistsException {
-        if(userRepository.findByEmailId(userRequestDTO.email()).isPresent()) {
+        if(userRepository.findByEmail(userRequestDTO.email()).isPresent()) {
             throw new UserAlreadyExistsException("Service.USER_ALREADY_EXISTS");
         }
         User newUser = modelMapper.map(userRequestDTO, User.class);
