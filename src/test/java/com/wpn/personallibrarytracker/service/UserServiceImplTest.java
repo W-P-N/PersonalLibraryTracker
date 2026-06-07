@@ -45,7 +45,7 @@ public class UserServiceImplTest {
                 "test@mail.com"
         );
 
-        Mockito.when(userRepository.findByEmailId(Mockito.anyString()))
+        Mockito.when(userRepository.findByEmail(Mockito.anyString()))
                     .thenReturn(Optional.empty());
         Mockito.when(modelMapper.map(Mockito.any(UserRequestDTO.class), Mockito.eq(User.class)))
                 .thenReturn(user);
@@ -59,6 +59,6 @@ public class UserServiceImplTest {
 
         Assertions.assertEquals(userResponseDTO, newUser);
         Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any(User.class));
-        Mockito.verify(userRepository, Mockito.times(1)).findByEmailId(Mockito.anyString());
+        Mockito.verify(userRepository, Mockito.times(1)).findByEmail(Mockito.anyString());
     }
 }
