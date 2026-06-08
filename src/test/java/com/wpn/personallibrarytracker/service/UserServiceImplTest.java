@@ -86,4 +86,6 @@ public class UserServiceImplTest {
             userService.postUserDetails(userRequestDTO);
         });
     }
+
+
 }
