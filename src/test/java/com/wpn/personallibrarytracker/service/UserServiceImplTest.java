@@ -4,6 +4,7 @@ import com.wpn.personallibrarytracker.dto.UserRequestDTO;
 import com.wpn.personallibrarytracker.dto.UserResponseDTO;
 import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
+import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -87,5 +88,45 @@ public class UserServiceImplTest {
         });
     }
 
+    @Test
+    void getUserById_shouldReturnUserResponseDTO_whenUserIdIsFound() {
+        // Arrange
+        User foundUser = new User();
+        foundUser.setUserId(12345);
+        foundUser.setUserName("test");
+        foundUser.setPassword("testPassword");
+        foundUser.setEmail("test@mail.com");
 
+        UserResponseDTO userResponseDTO = new UserResponseDTO(
+                foundUser.getUserId(),
+                foundUser.getUserName(),
+                foundUser.getEmail()
+        );
+
+        Mockito.when(userRepository.findById(Mockito.anyInt()))
+                .thenReturn(Optional.of(foundUser));
+        Mockito.when(modelMapper.map(Mockito.any(User.class), Mockito.eq(UserResponseDTO.class)))
+                .thenReturn(userResponseDTO);
+
+        // Act and Assert
+        Assertions.assertEquals(
+                userService.getUserById(Mockito.anyInt()),
+                userResponseDTO
+        );
+        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+    }
+
+    @Test
+    void getUserById_shouldThrowUserNotFoundException_whenUserIdIsNotFound() {
+        // Arrange
+        Mockito.when(userRepository.findById(Mockito.anyInt()))
+                .thenReturn(Optional.empty());
+
+        // Act and Assert
+        Assertions.assertThrows(UserNotFoundException.class, () -> {
+            userService.getUserById(12345);
+        });
+        
+        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+    }
 }
