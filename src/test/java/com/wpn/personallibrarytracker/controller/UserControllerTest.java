@@ -62,16 +62,13 @@ public class UserControllerTest {
     }
 
     @Test
-    void postUserDetails_shouldReturn500_whenInvalidBody() throws Exception {
-        // NOTE: Returns 500 instead of 400 because GlobalExceptionHandler lacks a
-        // dedicated MethodArgumentNotValidException handler — it falls through to
-        // the generic Exception handler which returns INTERNAL_SERVER_ERROR.
+    void postUserDetails_shouldReturn400_whenInvalidBody() throws Exception {
         UserRequestDTO request = new UserRequestDTO("testuser", "", "password123");
 
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isUnprocessableContent());
     }
 
     @Test
