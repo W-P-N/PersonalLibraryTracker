@@ -6,6 +6,6 @@ import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 
 public interface UserService {
-    UserResponseDTO getUserDetails(Integer userId) throws UserNotFoundException;
+    UserResponseDTO getUserById(Integer userId) throws UserNotFoundException;
     UserResponseDTO postUserDetails(UserRequestDTO userRequestDTO) throws UserAlreadyExistsException;
 }

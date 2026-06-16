@@ -22,7 +22,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserResponseDTO> getUserDetails(@PathVariable Integer userId) throws UserNotFoundException {
-        UserResponseDTO userResponseDTO = userService.getUserDetails(userId);
+        UserResponseDTO userResponseDTO = userService.getUserById(userId);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 

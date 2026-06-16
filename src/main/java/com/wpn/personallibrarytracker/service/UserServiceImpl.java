@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserResponseDTO getUserDetails(Integer userId) throws UserNotFoundException {
+    public UserResponseDTO getUserById(Integer userId) throws UserNotFoundException {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Service.USER_NOT_FOUND"));
         return modelMapper.map(foundUser, UserResponseDTO.class);
