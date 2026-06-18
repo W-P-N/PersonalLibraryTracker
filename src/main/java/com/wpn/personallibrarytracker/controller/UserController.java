@@ -1,7 +1,8 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.UserRequestDTO;
+import com.wpn.personallibrarytracker.dto.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.UserResponseDTO;
+import com.wpn.personallibrarytracker.dto.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
@@ -30,9 +31,21 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> postUserDetails(
             @Valid
             @RequestBody
-            UserRequestDTO userRequestDTO
+            UserCreateRequestDTO userCreateRequestDTO
     ) throws UserAlreadyExistsException {
-        UserResponseDTO userResponseDTO = userService.postUserDetails(userRequestDTO);
+        UserResponseDTO userResponseDTO = userService.postUserDetails(userCreateRequestDTO);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{userId}")
+    public ResponseEntity<UserResponseDTO> putUserDetails(
+            @PathVariable
+            Integer userId,
+            @Valid
+            @RequestBody
+            UserUpdateRequestDTO userUpdateRequestDTO
+    ) throws UserNotFoundException {
+        UserResponseDTO userResponseDTO = userService.putUserDetails(userId, userUpdateRequestDTO);
+        return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 }

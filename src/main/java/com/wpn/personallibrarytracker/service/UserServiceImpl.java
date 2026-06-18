@@ -1,7 +1,8 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.UserRequestDTO;
+import com.wpn.personallibrarytracker.dto.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.UserResponseDTO;
+import com.wpn.personallibrarytracker.dto.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
@@ -14,15 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service("userService")
 public class UserServiceImpl implements UserService {
-    @Autowired
-    private Environment environment;
-
+    private final Environment environment;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, Environment environment) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
+        this.environment = environment;
     }
 
     @Override
@@ -41,23 +41,37 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDTO postUserDetails(UserRequestDTO userRequestDTO) throws UserAlreadyExistsException {
-        if(userRepository.findByEmail(userRequestDTO.email()).isPresent()) {
+    public UserResponseDTO postUserDetails(UserCreateRequestDTO userCreateRequestDTO) throws UserAlreadyExistsException {
+        if(userRepository.findByEmail(userCreateRequestDTO.email()).isPresent()) {
             throw new UserAlreadyExistsException(
                     environment.getProperty("Service.USER_ALREADY_EXISTS")
             );
         }
         User newUser = new User();
-        newUser.setUserName(userRequestDTO.userName());
-        newUser.setEmail(userRequestDTO.email());
-        newUser.setPassword(userRequestDTO.password());
-        System.out.println("Before save");
+        newUser.setUserName(userCreateRequestDTO.userName());
+        newUser.setEmail(userCreateRequestDTO.email());
+        newUser.setPassword(userCreateRequestDTO.password());
         User savedUser = userRepository.save(newUser);
-        System.out.println("After save");
         return new UserResponseDTO(
                 savedUser.getUserId(),
                 savedUser.getUserName(),
                 savedUser.getEmail()
+        );
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDTO putUserDetails(Integer userId, UserUpdateRequestDTO userUpdateRequestDTO) throws UserNotFoundException {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(
+                        environment.getProperty("Service.USER_NOT_FOUND")
+                ));
+        foundUser.setUserName(userUpdateRequestDTO.userName());
+        foundUser.setEmail(userUpdateRequestDTO.email());
+        return new UserResponseDTO(
+                foundUser.getUserId(),
+                foundUser.getUserName(),
+                foundUser.getEmail()
         );
     }
 }
