@@ -6,6 +6,7 @@ import com.wpn.personallibrarytracker.dto.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
+import netscape.javascript.JSObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,5 +107,16 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.userId").value(1))
                 .andExpect(jsonPath("$.userName").value("test1"))
                 .andExpect(jsonPath("$.email").value("test@123.com"));
+    }
+
+    @Test
+    void putUserDetails_shouldReturn404_whenNotFound() throws Exception {
+        UserUpdateRequestDTO userUpdateRequestDTO = new UserUpdateRequestDTO("test1", "test@123.com");
+        Mockito.when(userService.putUserDetails(123, userUpdateRequestDTO))
+                .thenThrow(new UserNotFoundException("User not found"));
+        mockMvc.perform(put("/users/{userId}", 123)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
+                .andExpect(status().isNotFound());
     }
 }

@@ -155,8 +155,15 @@ public class UserServiceImplTest {
 
         Assertions.assertEquals(expectedUserResponseDTO, userResponseDTO);
         Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+    }
 
-
-
+    @Test
+    void putUserDetailsById_shouldReturnUserNotFound_whenUserIdIsNotFound() {
+        Mockito.when(userRepository.findById(Mockito.anyInt()))
+                .thenReturn(Optional.empty());
+        Assertions.assertThrows(UserNotFoundException.class, () -> {
+            userService.putUserDetails(123, new UserUpdateRequestDTO("test", "test@123.com"));
+        });
+        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
     }
 }
