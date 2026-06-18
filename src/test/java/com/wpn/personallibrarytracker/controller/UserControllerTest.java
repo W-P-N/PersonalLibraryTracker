@@ -1,7 +1,8 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.UserRequestDTO;
+import com.wpn.personallibrarytracker.dto.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.UserResponseDTO;
+import com.wpn.personallibrarytracker.dto.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
@@ -15,8 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,10 +34,10 @@ public class UserControllerTest {
 
     @Test
     void postUserDetails_shouldReturn201AndUserResponseDTO_whenValidBody() throws Exception {
-        UserRequestDTO request = new UserRequestDTO("testuser", "test@mail.com", "password123");
+        UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "test@mail.com", "password123");
         UserResponseDTO response = new UserResponseDTO(1, "testuser", "test@mail.com");
 
-        Mockito.when(userService.postUserDetails(any(UserRequestDTO.class))).thenReturn(response);
+        Mockito.when(userService.postUserDetails(any(UserCreateRequestDTO.class))).thenReturn(response);
 
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -50,9 +50,9 @@ public class UserControllerTest {
 
     @Test
     void postUserDetails_shouldReturn409_whenDuplicateEmail() throws Exception {
-        UserRequestDTO request = new UserRequestDTO("testuser", "test@mail.com", "password123");
+        UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "test@mail.com", "password123");
 
-        Mockito.when(userService.postUserDetails(any(UserRequestDTO.class)))
+        Mockito.when(userService.postUserDetails(any(UserCreateRequestDTO.class)))
                 .thenThrow(new UserAlreadyExistsException("Email already exists"));
 
         mockMvc.perform(post("/users")
@@ -63,7 +63,7 @@ public class UserControllerTest {
 
     @Test
     void postUserDetails_shouldReturn400_whenInvalidBody() throws Exception {
-        UserRequestDTO request = new UserRequestDTO("testuser", "", "password123");
+        UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "", "password123");
 
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -92,5 +92,19 @@ public class UserControllerTest {
         mockMvc.perform(get("/users/1")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void putUserDetails_shouldReturn200AndUserResponseDTO_whenUserFound() throws Exception {
+        UserUpdateRequestDTO userUpdateRequestDTO = new UserUpdateRequestDTO("test1", "test@123.com");
+        UserResponseDTO userResponseDTO = new UserResponseDTO(1, "test1", "test@123.com");
+        Mockito.when(userService.putUserDetails(1, userUpdateRequestDTO)).thenReturn(userResponseDTO);
+        mockMvc.perform(put("/users/{userId}", 1)
+                .content(objectMapper.writeValueAsString(userUpdateRequestDTO))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(1))
+                .andExpect(jsonPath("$.userName").value("test1"))
+                .andExpect(jsonPath("$.email").value("test@123.com"));
     }
 }
