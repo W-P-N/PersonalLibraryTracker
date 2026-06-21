@@ -166,4 +166,30 @@ public class UserServiceImplTest {
         });
         Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
     }
+
+    @Test
+    void deleteUserById_shouldNothing() {
+        Integer userId = 1;
+        User mockUser = new User();
+        mockUser.setUserId(userId);
+        mockUser.setUserName("Test");
+
+        Mockito.when(userRepository.findById(userId))
+                .thenReturn(Optional.of(mockUser));
+        Mockito.doNothing().when(userRepository).delete(mockUser);
+        userService.deleteUserByUserId(userId);
+
+        Mockito.verify(userRepository, Mockito.times(1)).findById(userId);
+        Mockito.verify(userRepository, Mockito.times(1)).delete(mockUser);
+    }
+
+    @Test
+    void deleteUserById_shouldThrowUserNotFoundException_whenUserIdIsNotFound() {
+        Mockito.when(userRepository.findById(Mockito.anyInt()))
+                .thenReturn(Optional.empty());
+        Assertions.assertThrows(UserNotFoundException.class, () -> {
+            userService.deleteUserByUserId(Mockito.anyInt());
+        });
+        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+    }
 }
