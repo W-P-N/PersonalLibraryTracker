@@ -10,4 +10,5 @@ public interface UserService {
     UserResponseDTO getUserById(Integer userId) throws UserNotFoundException;
     UserResponseDTO postUserDetails(UserCreateRequestDTO userCreateRequestDTO) throws UserAlreadyExistsException;
     UserResponseDTO putUserDetails(Integer userId, UserUpdateRequestDTO userUpdateRequestDTO) throws UserNotFoundException;
+    void deleteUserByUserId(Integer userId) throws UserNotFoundException;
 }

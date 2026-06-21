@@ -119,4 +119,22 @@ public class UserControllerTest {
                 .content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void deleteUserById_shouldReturn204() throws Exception {
+        Integer mockUserId = 100;
+        mockMvc.perform(delete("/users/{userId}", mockUserId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+        Mockito.verify(userService).deleteUserByUserId(mockUserId);
+    }
+
+    @Test
+    void deleteUserById_shouldReturn404_whenNotFound() throws Exception {
+        Integer mockUserId = 123;
+        Mockito.doThrow(new UserNotFoundException("User not found"))
+                .when(userService).deleteUserByUserId(mockUserId);
+        mockMvc.perform(delete("/users/{userId}", mockUserId))
+                .andExpect(status().isNotFound());
+    }
 }

@@ -48,4 +48,13 @@ public class UserController {
         UserResponseDTO userResponseDTO = userService.putUserDetails(userId, userUpdateRequestDTO);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUserById(
+            @PathVariable
+            Integer userId
+    ) throws UserNotFoundException {
+        userService.deleteUserByUserId(userId);
+        return ResponseEntity.noContent().build();
+    }
 }
