@@ -16,6 +16,8 @@ public class Book {
     private String title;
     private String author;
     private Integer totalPages;
+    private String isbn;
+    private String coverUrl;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name="book_id")
     private List<ReadingSession> readingSessions;

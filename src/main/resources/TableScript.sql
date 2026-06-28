@@ -14,6 +14,8 @@ CREATE TABLE books(
     title VARCHAR(52) NOT NULL,
     author VARCHAR(50),
     total_pages INT NOT NULL,
+    isbn VARCHAR(13),
+    cover_url VARCHAR(500),
     user_id INT,
     FOREIGN KEY (user_id)
         REFERENCES users(user_id)
