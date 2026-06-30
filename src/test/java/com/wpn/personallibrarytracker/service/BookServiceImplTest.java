@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -104,5 +105,69 @@ public class BookServiceImplTest {
 
         Assertions.assertEquals("User not found", exception.getMessage());
         Mockito.verify(bookRepository, Mockito.never()).save(any(Book.class));
+    }
+
+    @Test
+    public void getBooksByUser_shouldReturnBookResponseDTOList_whenUserExistsAndHasBooks() {
+        // Arrange
+        Integer userId = 1;
+        User user = new User();
+        user.setUserId(userId);
+
+        Book book = new Book();
+        book.setBookId(101);
+        book.setTitle("The Hobbit");
+        book.setAuthor("J.R.R. Tolkien");
+        book.setIsbn("9780007525492");
+        book.setCoverUrl("https://example.com/cover.jpg");
+        book.setTotalPages(310);
+
+        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        Mockito.when(bookRepository.findByUserUserId(userId)).thenReturn(List.of(book));
+
+        // Act
+        List<BookResponseDTO> response = bookService.getBooksByUser(userId);
+
+        // Assert
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.size());
+        Assertions.assertEquals(101, response.get(0).bookId());
+        Assertions.assertEquals("The Hobbit", response.get(0).title());
+    }
+
+    @Test
+    public void getBooksByUser_shouldReturnEmptyList_whenUserExistsAndHasNoBooks() {
+        // Arrange
+        Integer userId = 1;
+        User user = new User();
+        user.setUserId(userId);
+
+        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        Mockito.when(bookRepository.findByUserUserId(userId)).thenReturn(List.of());
+
+        // Act
+        List<BookResponseDTO> response = bookService.getBooksByUser(userId);
+
+        // Assert
+        Assertions.assertNotNull(response);
+        Assertions.assertTrue(response.isEmpty());
+    }
+
+    @Test
+    public void getBooksByUser_shouldThrowUserNotFoundException_whenUserDoesNotExist() {
+        // Arrange
+        Integer userId = 999;
+
+        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        Mockito.when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
+
+        // Act & Assert
+        UserNotFoundException exception = Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookService.getBooksByUser(userId)
+        );
+
+        Assertions.assertEquals("User not found", exception.getMessage());
+        Mockito.verify(bookRepository, Mockito.never()).findByUserUserId(any());
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service(value = "bookService")
 public class BookServiceImpl implements BookService {
@@ -61,5 +62,28 @@ public class BookServiceImpl implements BookService {
                 savedBook.getCoverUrl(),
                 savedBook.getTotalPages()
         );
+    }
+
+    @Override
+    public List<BookResponseDTO> getBooksByUser(Integer userId) {
+        User foundUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(
+                environment.getProperty("Service.USER_NOT_FOUND")
+        ));
+        List<Book> bookList = bookRepository.findByUserUserId(foundUser.getUserId());
+        if(bookList.isEmpty()) {
+            return List.of();
+        }
+        return bookList.stream()
+                .map(book ->
+                    new BookResponseDTO(
+                        book.getBookId(),
+                        book.getTitle(),
+                        book.getAuthor(),
+                        book.getIsbn(),
+                        book.getCoverUrl(),
+                        book.getTotalPages()
+                    )
+                )
+                .toList();
     }
 }

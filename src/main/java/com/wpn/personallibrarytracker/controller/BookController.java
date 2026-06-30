@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/books")
 @Validated
@@ -22,5 +24,13 @@ public class BookController {
             ) {
         BookResponseDTO bookResponseDTO = bookService.addBook(userId, bookRequestDTO);
         return ResponseEntity.ok(bookResponseDTO);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<BookResponseDTO>> getBooksByUserId(
+            @PathVariable Integer userId
+    ) {
+        List<BookResponseDTO> booksList = bookService.getBooksByUser(userId);
+        return ResponseEntity.ok(booksList);
     }
 }

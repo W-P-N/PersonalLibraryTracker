@@ -21,6 +21,9 @@ public class Book {
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name="book_id")
     private List<ReadingSession> readingSessions;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name="book_id")
     private List<Note> notes;
