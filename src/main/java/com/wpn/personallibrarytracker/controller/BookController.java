@@ -1,5 +1,6 @@
 package com.wpn.personallibrarytracker.controller;
 
+import com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.BookRequestDTO;
 import com.wpn.personallibrarytracker.dto.BookResponseDTO;
 import com.wpn.personallibrarytracker.service.BookService;
@@ -32,5 +33,13 @@ public class BookController {
     ) {
         List<BookResponseDTO> booksList = bookService.getBooksByUser(userId);
         return ResponseEntity.ok(booksList);
+    }
+
+    @GetMapping("/{userId}/{bookId}")
+    public ResponseEntity<BookDetailsResponseDTO> getBookByBookIdUserId(
+            @PathVariable Integer userId,
+            @PathVariable Integer bookId
+    ) {
+        return ResponseEntity.ok(bookService.getBookByUser(userId, bookId));
     }
 }

@@ -17,6 +17,9 @@ public class BookRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private jakarta.persistence.EntityManager entityManager;
 
     @Test
     void findByUserUserId_shouldReturnBooks_whenUserHasBooks() {
@@ -65,5 +68,34 @@ public class BookRepositoryTest {
 
         // Assert
         Assertions.assertTrue(books.isEmpty());
+    }
+
+    @Test
+    void findByBookIdAndUserId_shouldReturnBookEntity_whenUserExistsAndHasBookWithGivenId() {
+        // Arrange
+        User user = new User();
+        user.setUserName("testuser3");
+        user.setEmail("testuser3@mail.com");
+        user.setPassword("password");
+        User savedUser = userRepository.save(user);
+
+        Book book1 = new Book();
+        book1.setTitle("Title 1");
+        book1.setAuthor("Author 1");
+        book1.setTotalPages(100);
+        book1.setUser(savedUser);
+
+        Book savedBook = bookRepository.save(book1);
+
+        // Act
+        Book foundBook = bookRepository.findByBookIdAndUserUserId(savedBook.getBookId(), savedUser.getUserId())
+                .orElseThrow(() -> new RuntimeException("Unable to find book"));
+
+        // Assert
+        Assertions.assertNotNull(foundBook.getBookId());
+        Assertions.assertEquals("Title 1", foundBook.getTitle());
+        Assertions.assertEquals("Author 1", foundBook.getAuthor());
+        Assertions.assertEquals(100, foundBook.getTotalPages());
+        Assertions.assertEquals(savedUser.getUserId(), foundBook.getUser().getUserId());
     }
 }

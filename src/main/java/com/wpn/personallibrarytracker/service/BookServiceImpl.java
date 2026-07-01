@@ -1,9 +1,11 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.BookRequestDTO;
-import com.wpn.personallibrarytracker.dto.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.*;
 import com.wpn.personallibrarytracker.entity.Book;
+import com.wpn.personallibrarytracker.entity.ReadingSession;
+import com.wpn.personallibrarytracker.entity.Review;
 import com.wpn.personallibrarytracker.entity.User;
+import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
@@ -85,5 +87,50 @@ public class BookServiceImpl implements BookService {
                     )
                 )
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BookDetailsResponseDTO getBookByUser(Integer userId, Integer bookId) {
+        User foundUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Service.USER_NOT_FOUND"));
+        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId).orElseThrow(() -> new BookNotFoundForUserException("Service.BOOK_NOT_FOUND_FOR_USER"));
+
+        List<ReadingSessionResponseDTO> readingSessionResponseDTOList = foundBook.getReadingSessions()
+                .stream().map(readingSession -> new ReadingSessionResponseDTO(
+                        readingSession.getReadingSessionId(),
+                        readingSession.getPagesReadInSession(),
+                        readingSession.getEndSessionPageNumber(),
+                        readingSession.getSessionDateTime()
+                )).toList();
+        List<NoteResponseDTO> noteResponseDTOList = foundBook.getNotes()
+                .stream()
+                .map(note -> new NoteResponseDTO(
+                        note.getNoteId(),
+                        note.getContent(),
+                        note.getCreatedAt(),
+                        note.getPageNumber()
+                ))
+                .toList();
+
+        ReviewResponseDTO reviewResponseDTO = foundBook.getReview() != null ?
+                new ReviewResponseDTO(
+                        foundBook.getReview().getReviewId(),
+                        foundBook.getReview().getContent(),
+                        foundBook.getReview().getRating()
+                )
+                :
+                null;
+
+        return new BookDetailsResponseDTO(
+                foundBook.getBookId(),
+                foundBook.getTitle(),
+                foundBook.getAuthor(),
+                foundBook.getTotalPages(),
+                foundBook.getIsbn(),
+                foundBook.getCoverUrl(),
+                readingSessionResponseDTOList,
+                noteResponseDTOList,
+                reviewResponseDTO
+        );
     }
 }

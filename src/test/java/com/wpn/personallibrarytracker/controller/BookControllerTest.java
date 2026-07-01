@@ -2,6 +2,7 @@ package com.wpn.personallibrarytracker.controller;
 
 import com.wpn.personallibrarytracker.dto.BookRequestDTO;
 import com.wpn.personallibrarytracker.dto.BookResponseDTO;
+import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
 import org.junit.jupiter.api.Test;
@@ -134,6 +135,79 @@ public class BookControllerTest {
 
         // Act & Assert
         mockMvc.perform(get("/books/{userId}", userId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getBookByBookdIdUserId_shouldReturn200AndBookDetailsResponseDTO_whenUserExistsAndBookExists() throws Exception {
+        // Arrange
+        Integer userId = 1;
+        Integer bookId = 101;
+
+        com.wpn.personallibrarytracker.dto.ReadingSessionResponseDTO readingSession = new com.wpn.personallibrarytracker.dto.ReadingSessionResponseDTO(
+                1, 50, 100, java.time.LocalDateTime.now()
+        );
+        com.wpn.personallibrarytracker.dto.NoteResponseDTO note = new com.wpn.personallibrarytracker.dto.NoteResponseDTO(
+                1, "Great book", java.time.LocalDateTime.now(), 10
+        );
+        com.wpn.personallibrarytracker.dto.ReviewResponseDTO review = new com.wpn.personallibrarytracker.dto.ReviewResponseDTO(
+                1, "Amazing", 5
+        );
+
+        com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO response = new com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO(
+                bookId,
+                "The Hobbit",
+                "J.R.R. Tolkien",
+                310,
+                "9780007525492",
+                "https://example.com/cover.jpg",
+                List.of(readingSession),
+                List.of(note),
+                review
+        );
+
+        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId))).thenReturn(response);
+
+        // Act & Assert
+        mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bookId").value(101))
+                .andExpect(jsonPath("$.title").value("The Hobbit"))
+                .andExpect(jsonPath("$.author").value("J.R.R. Tolkien"))
+                .andExpect(jsonPath("$.totalPages").value(310))
+                .andExpect(jsonPath("$.readingSessionList.size()").value(1))
+                .andExpect(jsonPath("$.notes.size()").value(1))
+                .andExpect(jsonPath("$.review.rating").value(5));
+    }
+
+    @Test
+    void getBookByBookIdUserId_shouldReturn404_whenUserNotFound() throws Exception {
+        // Arrange
+        Integer userId = 999;
+        Integer bookId = 101;
+
+        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId)))
+                .thenThrow(new UserNotFoundException("User not found"));
+
+        // Act & Assert
+        mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getBookByBookIdUserId_shouldReturn404_whenBookNotFoundForUser() throws Exception {
+        // Arrange
+        Integer userId = 1;
+        Integer bookId = 999;
+
+        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId)))
+                .thenThrow(new BookNotFoundForUserException("Book not found for user"));
+
+        // Act & Assert
+        mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
