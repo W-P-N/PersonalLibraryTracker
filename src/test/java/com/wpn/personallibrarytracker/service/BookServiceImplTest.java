@@ -1,7 +1,9 @@
 package com.wpn.personallibrarytracker.service;
 
+import com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.BookRequestDTO;
 import com.wpn.personallibrarytracker.dto.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.BookUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.Note;
 import com.wpn.personallibrarytracker.entity.ReadingSession;
@@ -175,6 +177,7 @@ public class BookServiceImplTest {
         Mockito.verify(bookRepository, Mockito.never()).findByUserUserId(any());
     }
 
+    @Test
     public void getBookByUser_shouldReturnBookDetailsResposeDTO_whenUserIdAndBookIdAreValid() {
         // Arrange
         Integer userId = 1;
@@ -218,33 +221,34 @@ public class BookServiceImplTest {
         com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO response = bookService.getBookByUser(userId, bookId);
 
         // Assert
-        org.junit.jupiter.api.Assertions.assertNotNull(response);
-        org.junit.jupiter.api.Assertions.assertEquals(bookId, response.bookId());
-        org.junit.jupiter.api.Assertions.assertEquals("The Hobbit", response.title());
-        org.junit.jupiter.api.Assertions.assertEquals("J.R.R. Tolkien", response.author());
-        org.junit.jupiter.api.Assertions.assertEquals(310, response.totalPages());
-        org.junit.jupiter.api.Assertions.assertEquals(1, response.readingSessionList().size());
-        org.junit.jupiter.api.Assertions.assertEquals(1, response.notes().size());
-        org.junit.jupiter.api.Assertions.assertNotNull(response.review());
-        org.junit.jupiter.api.Assertions.assertEquals(5, response.review().rating());
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(bookId, response.bookId());
+        Assertions.assertEquals("The Hobbit", response.title());
+        Assertions.assertEquals("J.R.R. Tolkien", response.author());
+        Assertions.assertEquals(310, response.totalPages());
+        Assertions.assertEquals(1, response.readingSessionList().size());
+        Assertions.assertEquals(1, response.notes().size());
+        Assertions.assertNotNull(response.review());
+        Assertions.assertEquals(5, response.review().rating());
     }
 
+    @Test
     public void getBookByUser_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
         // Arrange
         Integer userId = 999;
         Integer bookId = 101;
 
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
 
         // Act & Assert
-        org.junit.jupiter.api.Assertions.assertThrows(
+        Assertions.assertThrows(
                 UserNotFoundException.class,
                 () -> bookService.getBookByUser(userId, bookId)
         );
         Mockito.verify(bookRepository, org.mockito.Mockito.never()).findByBookIdAndUserUserId(org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt());
     }
 
+    @Test
     public void getBookByUser_shouldThrowBookNotFoundForUserException_whenUserIdIsValidAndBookIdIsInvalid() {
         // Arrange
         Integer userId = 1;
@@ -257,9 +261,106 @@ public class BookServiceImplTest {
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        org.junit.jupiter.api.Assertions.assertThrows(
+        Assertions.assertThrows(
                 BookNotFoundForUserException.class,
                 () -> bookService.getBookByUser(userId, bookId)
         );
+    }
+
+    @Test
+    public void updateBookAll_shouldReturnBookResponseDTO() {
+        // Arrange
+        Integer userId = 12;
+        Integer bookId = 14;
+
+        Book foundBook = new Book();
+        foundBook.setBookId(14);
+        foundBook.setTitle("TestBook");
+        foundBook.setAuthor("Test Author");
+        foundBook.setCoverUrl("https://test");
+        foundBook.setIsbn("12334");
+        foundBook.setTotalPages(341);
+
+        Mockito.when(userRepository.existsById(userId))
+                .thenReturn(true);
+        Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId))
+                .thenReturn(Optional.of(foundBook));
+
+        BookUpdateRequestDTO bookUpdateRequestDTO = new BookUpdateRequestDTO(
+                "TestBook1",
+                "Test Author 1",
+                234,
+                "12353",
+                "https://test12"
+        );
+
+        // Act
+        BookResponseDTO bookResponseDTO = bookService.updateBook(userId, bookId, bookUpdateRequestDTO);
+
+        // Assert
+        Assertions.assertEquals(bookResponseDTO.title(), bookUpdateRequestDTO.title());
+        Assertions.assertEquals(bookResponseDTO.author(), bookUpdateRequestDTO.author());
+        Assertions.assertEquals(bookResponseDTO.totalPages(), bookUpdateRequestDTO.totalPages());
+        Assertions.assertEquals(bookResponseDTO.isbn(), bookUpdateRequestDTO.isbn());
+        Assertions.assertEquals(bookResponseDTO.coverUrl(), bookUpdateRequestDTO.coverUrl());
+
+        Mockito.verify(bookRepository, Mockito.times(1)).save(Mockito.any(Book.class));
+    }
+
+    @Test
+    public void updateBook_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+        BookUpdateRequestDTO bookUpdateRequestDTO = new BookUpdateRequestDTO(
+                "TestBook1",
+                "Test Author 1",
+                234,
+                "12353",
+                "https://test12"
+        );
+        // Act
+        Mockito.when(userRepository.existsById(mockUserId))
+                .thenThrow(UserNotFoundException.class);
+        // Assert
+        Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookService.updateBook(mockUserId, mockBookId, bookUpdateRequestDTO)
+        );
+
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(Mockito.anyInt());
+    }
+
+    @Test
+    void updateBook_shouldThrowBookNotFoundForTheUserException_whenBookIdIsInvalid() {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+        BookUpdateRequestDTO bookUpdateRequestDTO = new BookUpdateRequestDTO(
+                "TestBook1",
+                "Test Author 1",
+                234,
+                "12353",
+                "https://test12"
+        );
+        // Act
+        Mockito.when(userRepository.existsById(mockUserId))
+                        .thenReturn(true);
+        Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
+                .thenReturn(Optional.empty());
+        // Assert
+        Assertions.assertThrows(
+                BookNotFoundForUserException.class,
+                () -> bookService.updateBook(mockUserId, mockBookId, bookUpdateRequestDTO)
+        );
+
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(Mockito.anyInt());
+        Mockito.verify(bookRepository, Mockito.times(1))
+                .findByBookIdAndUserUserId(
+                        Mockito.anyInt(),
+                        Mockito.anyInt()
+                );
     }
 }

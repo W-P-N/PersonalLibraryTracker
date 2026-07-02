@@ -16,6 +16,7 @@ public class Book {
     private String title;
     private String author;
     private Integer totalPages;
+    @Column(unique = true, nullable = true)
     private String isbn;
     private String coverUrl;
     @OneToMany(cascade = CascadeType.ALL)

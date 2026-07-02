@@ -3,7 +3,9 @@ package com.wpn.personallibrarytracker.controller;
 import com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.BookRequestDTO;
 import com.wpn.personallibrarytracker.dto.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.BookUpdateRequestDTO;
 import com.wpn.personallibrarytracker.service.BookService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -41,5 +43,16 @@ public class BookController {
             @PathVariable Integer bookId
     ) {
         return ResponseEntity.ok(bookService.getBookByUser(userId, bookId));
+    }
+
+    @PatchMapping("/{userId}/{bookId}")
+    public ResponseEntity<BookResponseDTO> updateBook(
+            @PathVariable Integer userId,
+            @PathVariable Integer bookId,
+            @RequestBody
+            @Valid
+            BookUpdateRequestDTO bookUpdateRequestDTO
+    ) {
+        return ResponseEntity.ok(bookService.updateBook(userId, bookId, bookUpdateRequestDTO));
     }
 }

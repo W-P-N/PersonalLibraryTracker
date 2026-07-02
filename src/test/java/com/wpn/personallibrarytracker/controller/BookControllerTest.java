@@ -1,7 +1,6 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.BookRequestDTO;
-import com.wpn.personallibrarytracker.dto.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.*;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
@@ -16,8 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import java.util.List;
@@ -145,17 +143,17 @@ public class BookControllerTest {
         Integer userId = 1;
         Integer bookId = 101;
 
-        com.wpn.personallibrarytracker.dto.ReadingSessionResponseDTO readingSession = new com.wpn.personallibrarytracker.dto.ReadingSessionResponseDTO(
+        ReadingSessionResponseDTO readingSession = new ReadingSessionResponseDTO(
                 1, 50, 100, java.time.LocalDateTime.now()
         );
-        com.wpn.personallibrarytracker.dto.NoteResponseDTO note = new com.wpn.personallibrarytracker.dto.NoteResponseDTO(
+        NoteResponseDTO note = new NoteResponseDTO(
                 1, "Great book", java.time.LocalDateTime.now(), 10
         );
-        com.wpn.personallibrarytracker.dto.ReviewResponseDTO review = new com.wpn.personallibrarytracker.dto.ReviewResponseDTO(
+        ReviewResponseDTO review = new ReviewResponseDTO(
                 1, "Amazing", 5
         );
 
-        com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO response = new com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO(
+        BookDetailsResponseDTO response = new com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO(
                 bookId,
                 "The Hobbit",
                 "J.R.R. Tolkien",
@@ -209,6 +207,87 @@ public class BookControllerTest {
         // Act & Assert
         mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
                 .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateBook_shouldReturn200() throws Exception {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+        BookUpdateRequestDTO mockBookUpdateRequestDTO = new BookUpdateRequestDTO(
+                "test title",
+                "test author",
+                123,
+                "23542513",
+                "https://wer.sfg.rwt"
+        );
+
+        BookResponseDTO mockBookResponseDTO = new BookResponseDTO(
+                mockBookId,
+                "test title",
+                "test author",
+                "23542513",
+                "https://wer.sfg.rwt",
+                123
+        );
+        Mockito.when(bookService.updateBook(eq(mockUserId), eq(mockBookId), eq(mockBookUpdateRequestDTO)))
+                        .thenReturn(mockBookResponseDTO);
+        // Act
+        mockMvc.perform(patch("/books/{userId}/{bookId}", mockUserId, mockBookId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("test title"))
+                .andExpect(jsonPath("$.author").value("test author"))
+                .andExpect(jsonPath("$.totalPages").value(123))
+                .andExpect(jsonPath("$.isbn").value("23542513"))
+                .andExpect(jsonPath("$.coverUrl").value("https://wer.sfg.rwt"));
+
+    }
+
+    @Test
+    void updateBook_shouldReturn404_whenUserNotFound() throws Exception {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+        BookUpdateRequestDTO mockBookUpdateRequestDTO = new BookUpdateRequestDTO(
+                "test title",
+                "test author",
+                123,
+                "23542513",
+                "https://wer.sfg.rwt"
+        );
+        Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
+                .thenThrow(UserNotFoundException.class);
+        // Act
+        mockMvc.perform(patch("/books/{userId}/{bookId}", mockUserId, mockBookId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateBook_shouldReturn404_whenBookNotFound() throws Exception {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+        BookUpdateRequestDTO mockBookUpdateRequestDTO = new BookUpdateRequestDTO(
+                "test title",
+                "test author",
+                123,
+                "23542513",
+                "https://wer.sfg.rwt"
+        );
+        Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
+                .thenThrow(BookNotFoundForUserException.class);
+        // Act
+        mockMvc.perform(patch("/books/{userId}/{bookId}", mockUserId, mockBookId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 }

@@ -133,4 +133,45 @@ public class BookServiceImpl implements BookService {
                 reviewResponseDTO
         );
     }
+
+    @Override
+    @Transactional
+    public BookResponseDTO updateBook(Integer userId, Integer bookId, BookUpdateRequestDTO bookUpdateRequestDTO) {
+        if(!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(
+                    environment.getProperty("Service.USER_NOT_FOUND")
+            );
+        };
+
+        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId)
+                .orElseThrow(() -> new BookNotFoundForUserException(
+                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
+                ));
+
+        if(bookUpdateRequestDTO.title() != null) {
+            foundBook.setTitle(bookUpdateRequestDTO.title());
+        }
+        if(bookUpdateRequestDTO.author() != null) {
+            foundBook.setAuthor(bookUpdateRequestDTO.author());
+        }
+        if(bookUpdateRequestDTO.isbn() != null) {
+            foundBook.setIsbn(bookUpdateRequestDTO.isbn());
+        }
+        if(bookUpdateRequestDTO.totalPages() != null) {
+            foundBook.setTotalPages(bookUpdateRequestDTO.totalPages());
+        }
+        if(bookUpdateRequestDTO.coverUrl() != null) {
+            foundBook.setCoverUrl(bookUpdateRequestDTO.coverUrl());
+        }
+        bookRepository.save(foundBook);
+
+        return new BookResponseDTO(
+                foundBook.getBookId(),
+                foundBook.getTitle(),
+                foundBook.getAuthor(),
+                foundBook.getIsbn(),
+                foundBook.getCoverUrl(),
+                foundBook.getTotalPages()
+        );
+    }
 }
