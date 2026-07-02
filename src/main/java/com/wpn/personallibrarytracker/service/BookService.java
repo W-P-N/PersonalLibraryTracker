@@ -13,4 +13,5 @@ public interface BookService {
     List<BookResponseDTO> getBooksByUser(Integer userId);
     BookDetailsResponseDTO getBookByUser(Integer userId, Integer bookId);
     BookResponseDTO updateBook(Integer useId, Integer bookId, BookUpdateRequestDTO bookUpdateRequestDTO);
+    void deleteBook(Integer userId, Integer bookId);
 }

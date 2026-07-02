@@ -363,4 +363,92 @@ public class BookServiceImplTest {
                         Mockito.anyInt()
                 );
     }
+
+    @Test
+    void deleteBook_shouldDeleteBook_whenUserAndBookExist() {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+
+        Book mockBook = new Book();
+        mockBook.setBookId(mockBookId);
+
+        Mockito.when(userRepository.existsById(mockUserId))
+                .thenReturn(true);
+
+        Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
+                .thenReturn(Optional.of(mockBook));
+
+        // Act
+        bookService.deleteBook(mockUserId, mockBookId);
+
+        // Assert
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(Mockito.anyInt());
+
+        Mockito.verify(bookRepository, Mockito.times(1))
+                .findByBookIdAndUserUserId(
+                        Mockito.anyInt(),
+                        Mockito.anyInt()
+                );
+
+        Mockito.verify(bookRepository, Mockito.times(1))
+                .delete(mockBook);
+    }
+
+    @Test
+    void deleteBook_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+
+        Mockito.when(userRepository.existsById(mockUserId))
+                .thenReturn(false);
+
+        // Assert
+        Assertions.assertThrows(
+                UserNotFoundException.class,
+                () -> bookService.deleteBook(mockUserId, mockBookId)
+        );
+
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(Mockito.anyInt());
+
+        Mockito.verify(bookRepository, Mockito.never())
+                .findByBookIdAndUserUserId(Mockito.anyInt(), Mockito.anyInt());
+
+        Mockito.verify(bookRepository, Mockito.never())
+                .delete(Mockito.any(Book.class));
+    }
+
+    @Test
+    void deleteBook_shouldThrowBookNotFoundForUserException_whenBookIdIsInvalid() {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+
+        Mockito.when(userRepository.existsById(mockUserId))
+                .thenReturn(true);
+
+        Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
+                .thenReturn(Optional.empty());
+
+        // Assert
+        Assertions.assertThrows(
+                BookNotFoundForUserException.class,
+                () -> bookService.deleteBook(mockUserId, mockBookId)
+        );
+
+        Mockito.verify(userRepository, Mockito.times(1))
+                .existsById(Mockito.anyInt());
+
+        Mockito.verify(bookRepository, Mockito.times(1))
+                .findByBookIdAndUserUserId(
+                        Mockito.anyInt(),
+                        Mockito.anyInt()
+                );
+
+        Mockito.verify(bookRepository, Mockito.never())
+                .delete(Mockito.any(Book.class));
+    }
 }

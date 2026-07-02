@@ -290,4 +290,56 @@ public class BookControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void deleteBook_shouldReturn204_whenBookIsDeletedSuccessfully() throws Exception {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+
+        Mockito.doNothing()
+                .when(bookService)
+                .deleteBook(mockUserId, mockBookId);
+
+        // Act
+        mockMvc.perform(delete("/books/{userId}/{bookId}", mockUserId, mockBookId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        // Assert
+        Mockito.verify(bookService, Mockito.times(1))
+                .deleteBook(mockUserId, mockBookId);
+    }
+
+    @Test
+    void deleteBook_shouldReturn404_whenUserNotFound() throws Exception {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+
+        Mockito.doThrow(UserNotFoundException.class)
+                .when(bookService)
+                .deleteBook(mockUserId, mockBookId);
+
+        // Act
+        mockMvc.perform(delete("/books/{userId}/{bookId}", mockUserId, mockBookId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteBook_shouldReturn404_whenBookNotFound() throws Exception {
+        // Arrange
+        Integer mockUserId = 12;
+        Integer mockBookId = 23;
+
+        Mockito.doThrow(BookNotFoundForUserException.class)
+                .when(bookService)
+                .deleteBook(mockUserId, mockBookId);
+
+        // Act
+        mockMvc.perform(delete("/books/{userId}/{bookId}", mockUserId, mockBookId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }

@@ -174,4 +174,19 @@ public class BookServiceImpl implements BookService {
                 foundBook.getTotalPages()
         );
     }
+
+    @Override
+    @Transactional
+    public void deleteBook(Integer userId, Integer bookId) {
+        if(!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(
+                    environment.getProperty("Service.USER_NOT_FOUND")
+            );
+        };
+        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId)
+                .orElseThrow(() -> new BookNotFoundForUserException(
+                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
+                ));
+        bookRepository.delete(foundBook);
+    }
 }
