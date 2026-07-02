@@ -1,5 +1,6 @@
 package com.wpn.personallibrarytracker.utility;
 
+import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -18,10 +19,15 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    @ExceptionHandler({UserAlreadyExistsException.class, UserNotFoundException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({
+            UserAlreadyExistsException.class,
+            UserNotFoundException.class,
+            MethodArgumentNotValidException.class,
+            BookNotFoundForUserException.class
+    })
     public ResponseEntity<ErrorResponse> handleUserExceptions(Exception exception) {
         ErrorResponse errorResponse = null;
-        if(exception instanceof UserNotFoundException) {
+        if(exception instanceof UserNotFoundException || exception instanceof BookNotFoundForUserException) {
             errorResponse = new ErrorResponse(
                     exception.getMessage(),
                     HttpStatus.NOT_FOUND.value()

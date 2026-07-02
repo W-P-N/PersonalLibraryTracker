@@ -14,4 +14,5 @@ public class Note {
     private Integer noteId;
     private String content;
     private LocalDateTime createdAt;
+    private Integer pageNumber;
 }

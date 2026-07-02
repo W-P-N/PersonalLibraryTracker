@@ -16,8 +16,7 @@ public class User {
     private String userName;
     private String email;
     private String password;
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Book> books;
 
     @Override
