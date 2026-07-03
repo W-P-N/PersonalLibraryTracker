@@ -16,11 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
     private final Environment environment;
     private final UserRepository userRepository;
-    private final ModelMapper modelMapper;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, Environment environment) {
+    public UserServiceImpl(UserRepository userRepository, Environment environment) {
         this.userRepository = userRepository;
-        this.modelMapper = modelMapper;
         this.environment = environment;
     }
 

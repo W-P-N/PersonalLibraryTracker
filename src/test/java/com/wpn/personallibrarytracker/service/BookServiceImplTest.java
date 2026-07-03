@@ -178,7 +178,7 @@ public class BookServiceImplTest {
     }
 
     @Test
-    public void getBookByUser_shouldReturnBookDetailsResposeDTO_whenUserIdAndBookIdAreValid() {
+    public void getBookDetails_shouldReturnBookDetailsResponseDTO_whenUserIdAndBookIdAreValid() {
         // Arrange
         Integer userId = 1;
         Integer bookId = 101;
@@ -214,7 +214,7 @@ public class BookServiceImplTest {
         review.setRating(5);
         book.setReview(review);
 
-        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId)).thenReturn(Optional.of(book));
 
         // Act
@@ -233,12 +233,12 @@ public class BookServiceImplTest {
     }
 
     @Test
-    public void getBookDetailsIdIsInvalid() {
+    public void getBookDetails_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
         // Arrange
         Integer userId = 999;
         Integer bookId = 101;
 
-        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        Mockito.when(userRepository.existsById(userId)).thenReturn(false);
 
         // Act & Assert
         Assertions.assertThrows(
@@ -249,7 +249,7 @@ public class BookServiceImplTest {
     }
 
     @Test
-    public void getBookByUser_shouldThrowBookNotFoundForUserException_whenUserIdIsValidAndBookIdIsInvalid() {
+    public void getBookDetails_shouldThrowBookNotFoundForUserException_whenUserIdIsValidAndBookIdIsInvalid() {
         // Arrange
         Integer userId = 1;
         Integer bookId = 999;
@@ -257,7 +257,7 @@ public class BookServiceImplTest {
         User user = new User();
         user.setUserId(userId);
 
-        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId)).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -268,7 +268,7 @@ public class BookServiceImplTest {
     }
 
     @Test
-    public void updateBookAll_shouldReturnBookResponseDTO() {
+    public void updateBook_shouldReturnBookResponseDTO() {
         // Arrange
         Integer userId = 12;
         Integer bookId = 14;
