@@ -1,6 +1,6 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.BookSearchResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
 
 import java.util.List;
 

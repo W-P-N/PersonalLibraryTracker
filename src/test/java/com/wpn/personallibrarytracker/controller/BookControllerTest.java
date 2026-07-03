@@ -1,6 +1,12 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.*;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
@@ -56,7 +62,7 @@ public class BookControllerTest {
         Mockito.when(bookService.addBook(eq(userId), any(BookRequestDTO.class))).thenReturn(response);
 
         // Act & Assert
-        mockMvc.perform(post("/books/{userId}", userId)
+        mockMvc.perform(post("/users/{userId}/books", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -84,14 +90,14 @@ public class BookControllerTest {
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
-        mockMvc.perform(post("/books/{userId}", userId)
+        mockMvc.perform(post("/users/{userId}/books", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void getBooksByUserId_shouldReturn200AndBooksList_whenBooksExist() throws Exception {
+    void getBooks_shouldReturn200AndBooksList_whenBooksExist() throws Exception {
         // Arrange
         Integer userId = 1;
         BookResponseDTO book1 = new BookResponseDTO(
@@ -114,7 +120,7 @@ public class BookControllerTest {
         Mockito.when(bookService.getBooksByUser(userId)).thenReturn(List.of(book1, book2));
 
         // Act & Assert
-        mockMvc.perform(get("/books/{userId}", userId)
+        mockMvc.perform(get("/users/{userId}/books", userId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.size()").value(2))
@@ -125,20 +131,20 @@ public class BookControllerTest {
     }
 
     @Test
-    void getBooksByUserId_shouldReturn404_whenUserNotFound() throws Exception {
+    void getBooks_shouldReturn404_whenUserNotFound() throws Exception {
         // Arrange
         Integer userId = 999;
         Mockito.when(bookService.getBooksByUser(userId))
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
-        mockMvc.perform(get("/books/{userId}", userId)
+        mockMvc.perform(get("/users/{userId}/books", userId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void getBookByBookdIdUserId_shouldReturn200AndBookDetailsResponseDTO_whenUserExistsAndBookExists() throws Exception {
+    void getBookById_shouldReturn200AndBookDetailsResponseDTO_whenUserExistsAndBookExists() throws Exception {
         // Arrange
         Integer userId = 1;
         Integer bookId = 101;
@@ -153,7 +159,7 @@ public class BookControllerTest {
                 1, "Amazing", 5
         );
 
-        BookDetailsResponseDTO response = new com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO(
+        BookDetailsResponseDTO response = new BookDetailsResponseDTO(
                 bookId,
                 "The Hobbit",
                 "J.R.R. Tolkien",
@@ -165,10 +171,10 @@ public class BookControllerTest {
                 review
         );
 
-        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId))).thenReturn(response);
+        Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId))).thenReturn(response);
 
         // Act & Assert
-        mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
+        mockMvc.perform(get("/users/{userId}/books/{bookId}", userId, bookId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bookId").value(101))
@@ -181,31 +187,31 @@ public class BookControllerTest {
     }
 
     @Test
-    void getBookByBookIdUserId_shouldReturn404_whenUserNotFound() throws Exception {
+    void getBookById_shouldReturn400UserNotFound_whenUserIdIsInvalid() throws Exception {
         // Arrange
         Integer userId = 999;
         Integer bookId = 101;
 
-        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId)))
+        Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId)))
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
-        mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
+        mockMvc.perform(get("/users/{userId}/books/{bookId}", userId, bookId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void getBookByBookIdUserId_shouldReturn404_whenBookNotFoundForUser() throws Exception {
+    void getBookId_shouldReturn404_whenBookNotFoundForUser() throws Exception {
         // Arrange
         Integer userId = 1;
         Integer bookId = 999;
 
-        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId)))
+        Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId)))
                 .thenThrow(new BookNotFoundForUserException("Book not found for user"));
 
         // Act & Assert
-        mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
+        mockMvc.perform(get("/users/{userId}/books/{bookId}", userId, bookId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -234,7 +240,7 @@ public class BookControllerTest {
         Mockito.when(bookService.updateBook(eq(mockUserId), eq(mockBookId), eq(mockBookUpdateRequestDTO)))
                         .thenReturn(mockBookResponseDTO);
         // Act
-        mockMvc.perform(patch("/books/{userId}/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(patch("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
                         .accept(MediaType.APPLICATION_JSON))
@@ -262,7 +268,7 @@ public class BookControllerTest {
         Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
                 .thenThrow(UserNotFoundException.class);
         // Act
-        mockMvc.perform(patch("/books/{userId}/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(patch("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
                 .accept(MediaType.APPLICATION_JSON))
@@ -284,7 +290,7 @@ public class BookControllerTest {
         Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
                 .thenThrow(BookNotFoundForUserException.class);
         // Act
-        mockMvc.perform(patch("/books/{userId}/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(patch("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
                         .accept(MediaType.APPLICATION_JSON))
@@ -302,7 +308,7 @@ public class BookControllerTest {
                 .deleteBook(mockUserId, mockBookId);
 
         // Act
-        mockMvc.perform(delete("/books/{userId}/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(delete("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
@@ -322,7 +328,7 @@ public class BookControllerTest {
                 .deleteBook(mockUserId, mockBookId);
 
         // Act
-        mockMvc.perform(delete("/books/{userId}/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(delete("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -338,7 +344,7 @@ public class BookControllerTest {
                 .deleteBook(mockUserId, mockBookId);
 
         // Act
-        mockMvc.perform(delete("/books/{userId}/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(delete("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }

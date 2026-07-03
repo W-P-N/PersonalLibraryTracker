@@ -1,9 +1,13 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.*;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
-import com.wpn.personallibrarytracker.entity.ReadingSession;
-import com.wpn.personallibrarytracker.entity.Review;
 import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
@@ -43,19 +47,17 @@ public class BookServiceImpl implements BookService {
                 () -> new UserNotFoundException(environment.getProperty("Service.USER_NOT_FOUND"))
         );
         Book newBook = new Book();
-        newBook.setAuthor(bookRequestDTO.author());
         newBook.setTitle(bookRequestDTO.title());
+        newBook.setAuthor(bookRequestDTO.author());
         newBook.setIsbn(bookRequestDTO.isbn());
         newBook.setTotalPages(bookRequestDTO.totalPages());
         newBook.setCoverUrl(bookRequestDTO.coverUrl());
-
+        newBook.setUser(foundUser);
         Book savedBook = bookRepository.save(newBook);
-
         if(foundUser.getBooks() == null) {
             foundUser.setBooks(new ArrayList<>());
         }
         foundUser.getBooks().add(savedBook);
-
         return new BookResponseDTO(
                 savedBook.getBookId(),
                 savedBook.getTitle(),
@@ -91,10 +93,16 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional(readOnly = true)
-    public BookDetailsResponseDTO getBookByUser(Integer userId, Integer bookId) {
-        User foundUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Service.USER_NOT_FOUND"));
-        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId).orElseThrow(() -> new BookNotFoundForUserException("Service.BOOK_NOT_FOUND_FOR_USER"));
-
+    public BookDetailsResponseDTO getBookDetails(Integer userId, Integer bookId) {
+        if(!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(
+                    environment.getProperty("Service.USER_NOT_FOUND")
+            );
+        };
+        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId)
+                .orElseThrow(() -> new BookNotFoundForUserException(
+                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
+                ));
         List<ReadingSessionResponseDTO> readingSessionResponseDTOList = foundBook.getReadingSessions()
                 .stream().map(readingSession -> new ReadingSessionResponseDTO(
                         readingSession.getReadingSessionId(),
@@ -111,7 +119,6 @@ public class BookServiceImpl implements BookService {
                         note.getPageNumber()
                 ))
                 .toList();
-
         ReviewResponseDTO reviewResponseDTO = foundBook.getReview() != null ?
                 new ReviewResponseDTO(
                         foundBook.getReview().getReviewId(),
@@ -120,7 +127,6 @@ public class BookServiceImpl implements BookService {
                 )
                 :
                 null;
-
         return new BookDetailsResponseDTO(
                 foundBook.getBookId(),
                 foundBook.getTitle(),
@@ -142,12 +148,10 @@ public class BookServiceImpl implements BookService {
                     environment.getProperty("Service.USER_NOT_FOUND")
             );
         };
-
         Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId)
                 .orElseThrow(() -> new BookNotFoundForUserException(
                         environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
                 ));
-
         if(bookUpdateRequestDTO.title() != null) {
             foundBook.setTitle(bookUpdateRequestDTO.title());
         }
@@ -164,7 +168,6 @@ public class BookServiceImpl implements BookService {
             foundBook.setCoverUrl(bookUpdateRequestDTO.coverUrl());
         }
         bookRepository.save(foundBook);
-
         return new BookResponseDTO(
                 foundBook.getBookId(),
                 foundBook.getTitle(),

@@ -1,7 +1,7 @@
 package com.wpn.personallibrarytracker.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wpn.personallibrarytracker.dto.BookSearchResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -10,6 +10,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service(value = "bookSearchService")
@@ -28,15 +29,13 @@ public class BookSearchServiceImpl implements BookSearchService {
                 .queryParam("q", searchTerm)
                 .queryParam("key", environment.getProperty("BOOKS_API_KEY"))
                 .toUriString();
-
         GoogleBooksResponse response = restTemplate.getForObject(url, GoogleBooksResponse.class);
         if (response == null || response.items() == null) {
             return new ArrayList<>();
         }
-
         return response.items().stream()
                 .map(this::mapToResponseDTO)
-                .filter(dto -> dto != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
@@ -47,14 +46,13 @@ public class BookSearchServiceImpl implements BookSearchService {
                 .queryParam("q", "isbn:" + isbn)
                 .queryParam("key", environment.getProperty("BOOKS_API_KEY"))
                 .toUriString();
-
         GoogleBooksResponse response = restTemplate.getForObject(url, GoogleBooksResponse.class);
         if (response != null && response.items() != null && !response.items().isEmpty()) {
             return mapToResponseDTO(response.items().get(0));
         }
         return null;
     }
-
+    // Helper function to map googleBookItem to bookSearchResponseDTO.
     private BookSearchResponseDTO mapToResponseDTO(GoogleBookItem item) {
         if (item == null || item.volumeInfo() == null) {
             return null;
@@ -62,13 +60,11 @@ public class BookSearchServiceImpl implements BookSearchService {
         VolumeInfo info = item.volumeInfo();
         String title = info.title();
         String description = info.description();
-
         // Handle authors (join multiple authors with a comma)
         String author = null;
         if (info.authors() != null && !info.authors().isEmpty()) {
             author = String.join(", ", info.authors());
         }
-
         // Handle ISBN (prioritize ISBN_13, fallback to ISBN_10)
         String isbn = null;
         if (info.industryIdentifiers() != null) {
@@ -86,7 +82,6 @@ public class BookSearchServiceImpl implements BookSearchService {
                         .orElse(null);
             }
         }
-
         // Handle cover URL (prioritize thumbnail, fallback to smallThumbnail)
         String coverUrl = null;
         if (info.imageLinks() != null) {
@@ -98,9 +93,7 @@ public class BookSearchServiceImpl implements BookSearchService {
                 coverUrl = coverUrl.replace("http://", "https://");
             }
         }
-
         Integer totalPages = info.pageCount();
-
         return new BookSearchResponseDTO(title, description, author, isbn, coverUrl, totalPages);
     }
 

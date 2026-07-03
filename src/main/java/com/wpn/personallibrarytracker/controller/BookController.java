@@ -1,9 +1,9 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO;
-import com.wpn.personallibrarytracker.dto.BookRequestDTO;
-import com.wpn.personallibrarytracker.dto.BookResponseDTO;
-import com.wpn.personallibrarytracker.dto.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
@@ -16,13 +16,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/books")
+@RequestMapping("/users/{userId}/books")
 @Validated
 public class BookController {
     @Autowired
     private BookService bookService;
 
-    @PostMapping("/{userId}")
+    @PostMapping
     public ResponseEntity<BookResponseDTO> addBook(
             @PathVariable Integer userId,
             @RequestBody BookRequestDTO bookRequestDTO
@@ -31,23 +31,23 @@ public class BookController {
         return ResponseEntity.ok(bookResponseDTO);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<BookResponseDTO>> getBooksByUserId(
+    @GetMapping
+    public ResponseEntity<List<BookResponseDTO>> getBooks(
             @PathVariable Integer userId
     ) {
         List<BookResponseDTO> booksList = bookService.getBooksByUser(userId);
         return ResponseEntity.ok(booksList);
     }
 
-    @GetMapping("/{userId}/{bookId}")
-    public ResponseEntity<BookDetailsResponseDTO> getBookByBookIdUserId(
+    @GetMapping("/{bookId}")
+    public ResponseEntity<BookDetailsResponseDTO> getBookById(
             @PathVariable Integer userId,
             @PathVariable Integer bookId
     ) {
-        return ResponseEntity.ok(bookService.getBookByUser(userId, bookId));
+        return ResponseEntity.ok(bookService.getBookDetails(userId, bookId));
     }
 
-    @PatchMapping("/{userId}/{bookId}")
+    @PatchMapping("/{bookId}")
     public ResponseEntity<BookResponseDTO> updateBook(
             @PathVariable Integer userId,
             @PathVariable Integer bookId,
@@ -58,7 +58,7 @@ public class BookController {
         return ResponseEntity.ok(bookService.updateBook(userId, bookId, bookUpdateRequestDTO));
     }
 
-    @DeleteMapping("/{userId}/{bookId}")
+    @DeleteMapping("/{bookId}")
     public ResponseEntity<Void> deleteBook(
             @PathVariable
             Integer userId,

@@ -1,6 +1,6 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.BookSearchResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
 import com.wpn.personallibrarytracker.service.BookSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

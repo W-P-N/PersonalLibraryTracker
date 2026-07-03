@@ -1,8 +1,8 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.UserCreateRequestDTO;
-import com.wpn.personallibrarytracker.dto.UserResponseDTO;
-import com.wpn.personallibrarytracker.dto.UserUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
 import java.util.Optional;
@@ -32,7 +31,7 @@ public class UserServiceImplTest {
     Environment environment;
 
     @Test
-    void postUserDetails_shouldReturnUserResponseDTO_whenEmailIsUnique() {
+    void registerUserDetails_shouldReturnUserResponseDTO_whenEmailIsUnique() {
         // Arrange
         UserCreateRequestDTO userCreateRequestDTO = new UserCreateRequestDTO(
                 "test",
@@ -58,7 +57,7 @@ public class UserServiceImplTest {
                 .thenReturn(user);
 
         // Act
-        UserResponseDTO userResponseDTO = userService.postUserDetails(userCreateRequestDTO);
+        UserResponseDTO userResponseDTO = userService.registerUser(userCreateRequestDTO);
 
         Assertions.assertEquals(userResponseDTO, newUser);
         Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any(User.class));
@@ -66,7 +65,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void postUserDetails_shouldThrowUserAlreadyExistsException_whenEmailExists() {
+    void registerUserDetails_shouldThrowUserAlreadyExistsException_whenEmailExists() {
         // Arrange
         User user = new User();
         user.setUserName("test");
@@ -85,7 +84,7 @@ public class UserServiceImplTest {
         );
         // Act and Assert
         Assertions.assertThrows(UserAlreadyExistsException.class, () -> {
-            userService.postUserDetails(userCreateRequestDTO);
+            userService.registerUser(userCreateRequestDTO);
         });
     }
 
@@ -109,7 +108,7 @@ public class UserServiceImplTest {
 
         // Act and Assert
         Assertions.assertEquals(
-                userService.getUserById(Mockito.anyInt()),
+                userService.getUser(Mockito.anyInt()),
                 userResponseDTO
         );
         Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
@@ -123,14 +122,14 @@ public class UserServiceImplTest {
 
         // Act and Assert
         Assertions.assertThrows(UserNotFoundException.class, () -> {
-            userService.getUserById(12345);
+            userService.getUser(12345);
         });
         
         Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
     }
 
     @Test
-    void putUserDetailsById_shouldReturnUserResponseDTO_whenUserIdIsFound() {
+    void updateUserDetailsById_shouldReturnUserResponseDTO_whenUserIdIsFound() {
         User foundUser = new User();
         foundUser.setUserId(12345);
         foundUser.setUserName("test");
@@ -151,18 +150,18 @@ public class UserServiceImplTest {
         Mockito.when(userRepository.findById(Mockito.anyInt()))
                 .thenReturn(Optional.of(foundUser));
 
-        UserResponseDTO expectedUserResponseDTO = userService.putUserDetails(Mockito.anyInt(), userUpdateRequestDTO);
+        UserResponseDTO expectedUserResponseDTO = userService.updateUser(Mockito.anyInt(), userUpdateRequestDTO);
 
         Assertions.assertEquals(expectedUserResponseDTO, userResponseDTO);
         Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
     }
 
     @Test
-    void putUserDetailsById_shouldReturnUserNotFound_whenUserIdIsNotFound() {
+    void updateUserDetailsById_shouldReturnUserNotFound_whenUserIdIsNotFound() {
         Mockito.when(userRepository.findById(Mockito.anyInt()))
                 .thenReturn(Optional.empty());
         Assertions.assertThrows(UserNotFoundException.class, () -> {
-            userService.putUserDetails(123, new UserUpdateRequestDTO("test", "test@123.com"));
+            userService.updateUser(123, new UserUpdateRequestDTO("test", "test@123.com"));
         });
         Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
     }
@@ -177,7 +176,7 @@ public class UserServiceImplTest {
         Mockito.when(userRepository.findById(userId))
                 .thenReturn(Optional.of(mockUser));
         Mockito.doNothing().when(userRepository).delete(mockUser);
-        userService.deleteUserByUserId(userId);
+        userService.deleteUser(userId);
 
         Mockito.verify(userRepository, Mockito.times(1)).findById(userId);
         Mockito.verify(userRepository, Mockito.times(1)).delete(mockUser);
@@ -188,7 +187,7 @@ public class UserServiceImplTest {
         Mockito.when(userRepository.findById(Mockito.anyInt()))
                 .thenReturn(Optional.empty());
         Assertions.assertThrows(UserNotFoundException.class, () -> {
-            userService.deleteUserByUserId(Mockito.anyInt());
+            userService.deleteUser(Mockito.anyInt());
         });
         Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
     }

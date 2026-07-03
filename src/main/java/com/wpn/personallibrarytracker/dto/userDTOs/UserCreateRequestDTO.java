@@ -1,4 +1,4 @@
-package com.wpn.personallibrarytracker.dto;
+package com.wpn.personallibrarytracker.dto.userDTOs;
 
 import jakarta.validation.constraints.*;
 
