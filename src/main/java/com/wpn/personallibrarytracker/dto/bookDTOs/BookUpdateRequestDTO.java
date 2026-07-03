@@ -1,7 +1,6 @@
-package com.wpn.personallibrarytracker.dto;
+package com.wpn.personallibrarytracker.dto.bookDTOs;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 
 public record BookUpdateRequestDTO(
         String title,

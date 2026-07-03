@@ -1,6 +1,4 @@
-package com.wpn.personallibrarytracker.dto;
-
-import lombok.Data;
+package com.wpn.personallibrarytracker.dto.userDTOs;
 
 public record UserResponseDTO(
         Integer userId,

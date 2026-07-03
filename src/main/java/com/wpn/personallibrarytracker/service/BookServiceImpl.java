@@ -1,9 +1,13 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.*;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
-import com.wpn.personallibrarytracker.entity.ReadingSession;
-import com.wpn.personallibrarytracker.entity.Review;
 import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
@@ -91,7 +95,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional(readOnly = true)
-    public BookDetailsResponseDTO getBookByUser(Integer userId, Integer bookId) {
+    public BookDetailsResponseDTO getBookDetails(Integer userId, Integer bookId) {
         User foundUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("Service.USER_NOT_FOUND"));
         Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId).orElseThrow(() -> new BookNotFoundForUserException("Service.BOOK_NOT_FOUND_FOR_USER"));
 

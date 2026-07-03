@@ -1,9 +1,9 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO;
-import com.wpn.personallibrarytracker.dto.BookRequestDTO;
-import com.wpn.personallibrarytracker.dto.BookResponseDTO;
-import com.wpn.personallibrarytracker.dto.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.Note;
 import com.wpn.personallibrarytracker.entity.ReadingSession;
@@ -218,7 +218,7 @@ public class BookServiceImplTest {
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId)).thenReturn(Optional.of(book));
 
         // Act
-        com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO response = bookService.getBookByUser(userId, bookId);
+        BookDetailsResponseDTO response = bookService.getBookDetails(userId, bookId);
 
         // Assert
         Assertions.assertNotNull(response);
@@ -233,7 +233,7 @@ public class BookServiceImplTest {
     }
 
     @Test
-    public void getBookByUser_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
+    public void getBookDetailsIdIsInvalid() {
         // Arrange
         Integer userId = 999;
         Integer bookId = 101;
@@ -243,7 +243,7 @@ public class BookServiceImplTest {
         // Act & Assert
         Assertions.assertThrows(
                 UserNotFoundException.class,
-                () -> bookService.getBookByUser(userId, bookId)
+                () -> bookService.getBookDetails(userId, bookId)
         );
         Mockito.verify(bookRepository, org.mockito.Mockito.never()).findByBookIdAndUserUserId(org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt());
     }
@@ -263,7 +263,7 @@ public class BookServiceImplTest {
         // Act & Assert
         Assertions.assertThrows(
                 BookNotFoundForUserException.class,
-                () -> bookService.getBookByUser(userId, bookId)
+                () -> bookService.getBookDetails(userId, bookId)
         );
     }
 

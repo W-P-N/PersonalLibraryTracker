@@ -1,7 +1,7 @@
 package com.wpn.personallibrarytracker.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.wpn.personallibrarytracker.dto.BookSearchResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;

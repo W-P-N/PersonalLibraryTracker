@@ -1,8 +1,8 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.UserCreateRequestDTO;
-import com.wpn.personallibrarytracker.dto.UserResponseDTO;
-import com.wpn.personallibrarytracker.dto.UserUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
@@ -22,39 +22,39 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<UserResponseDTO> getUserDetails(@PathVariable Integer userId) throws UserNotFoundException {
-        UserResponseDTO userResponseDTO = userService.getUserById(userId);
+    public ResponseEntity<UserResponseDTO> getUser(@PathVariable Integer userId) throws UserNotFoundException {
+        UserResponseDTO userResponseDTO = userService.getUser(userId);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<UserResponseDTO> postUserDetails(
+    public ResponseEntity<UserResponseDTO> createUser(
             @Valid
             @RequestBody
             UserCreateRequestDTO userCreateRequestDTO
     ) throws UserAlreadyExistsException {
-        UserResponseDTO userResponseDTO = userService.postUserDetails(userCreateRequestDTO);
+        UserResponseDTO userResponseDTO = userService.registerUser(userCreateRequestDTO);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<UserResponseDTO> putUserDetails(
+    public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable
             Integer userId,
             @Valid
             @RequestBody
             UserUpdateRequestDTO userUpdateRequestDTO
     ) throws UserNotFoundException {
-        UserResponseDTO userResponseDTO = userService.putUserDetails(userId, userUpdateRequestDTO);
+        UserResponseDTO userResponseDTO = userService.updateUser(userId, userUpdateRequestDTO);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> deleteUserById(
+    public ResponseEntity<Void> deleteUser(
             @PathVariable
             Integer userId
     ) throws UserNotFoundException {
-        userService.deleteUserByUserId(userId);
+        userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }
 }

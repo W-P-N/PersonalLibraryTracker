@@ -1,8 +1,8 @@
-package com.wpn.personallibrarytracker.dto;
+package com.wpn.personallibrarytracker.dto.bookDTOs;
 
-import com.wpn.personallibrarytracker.entity.Note;
-import com.wpn.personallibrarytracker.entity.ReadingSession;
-import com.wpn.personallibrarytracker.entity.Review;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 
 import java.util.List;
 

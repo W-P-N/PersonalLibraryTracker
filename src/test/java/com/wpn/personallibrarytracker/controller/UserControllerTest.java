@@ -1,12 +1,11 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.UserCreateRequestDTO;
-import com.wpn.personallibrarytracker.dto.UserResponseDTO;
-import com.wpn.personallibrarytracker.dto.UserUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
+import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
-import netscape.javascript.JSObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,11 +33,11 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void postUserDetails_shouldReturn201AndUserResponseDTO_whenValidBody() throws Exception {
+    void createUserDetails_shouldReturn201AndUserResponseDTO_whenValidBody() throws Exception {
         UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "test@mail.com", "password123");
         UserResponseDTO response = new UserResponseDTO(1, "testuser", "test@mail.com");
 
-        Mockito.when(userService.postUserDetails(any(UserCreateRequestDTO.class))).thenReturn(response);
+        Mockito.when(userService.registerUser(any(UserCreateRequestDTO.class))).thenReturn(response);
 
         mockMvc.perform(post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -50,10 +49,10 @@ public class UserControllerTest {
     }
 
     @Test
-    void postUserDetails_shouldReturn409_whenDuplicateEmail() throws Exception {
+    void createUser_shouldReturn409_whenDuplicateEmail() throws Exception {
         UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "test@mail.com", "password123");
 
-        Mockito.when(userService.postUserDetails(any(UserCreateRequestDTO.class)))
+        Mockito.when(userService.registerUser(any(UserCreateRequestDTO.class)))
                 .thenThrow(new UserAlreadyExistsException("Email already exists"));
 
         mockMvc.perform(post("/users")
@@ -63,7 +62,7 @@ public class UserControllerTest {
     }
 
     @Test
-    void postUserDetails_shouldReturn400_whenInvalidBody() throws Exception {
+    void createUser_shouldReturn400_whenInvalidBody() throws Exception {
         UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "", "password123");
 
         mockMvc.perform(post("/users")
@@ -76,7 +75,7 @@ public class UserControllerTest {
     void getUserDetails_shouldReturn200AndUserResponseDTO_whenFound() throws Exception {
         UserResponseDTO response = new UserResponseDTO(1, "testuser", "test@mail.com");
 
-        Mockito.when(userService.getUserById(1)).thenReturn(response);
+        Mockito.when(userService.getUser(1)).thenReturn(response);
 
         mockMvc.perform(get("/users/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -87,8 +86,8 @@ public class UserControllerTest {
     }
 
     @Test
-    void getUserDetails_shouldReturn404_whenNotFound() throws Exception {
-        Mockito.when(userService.getUserById(1)).thenThrow(new UserNotFoundException("User not found"));
+    void getUser_shouldReturn404_whenNotFound() throws Exception {
+        Mockito.when(userService.getUser(1)).thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(get("/users/1")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -96,10 +95,10 @@ public class UserControllerTest {
     }
 
     @Test
-    void putUserDetails_shouldReturn200AndUserResponseDTO_whenUserFound() throws Exception {
+    void updateUserDetails_shouldReturn200AndUserResponseDTO_whenUserFound() throws Exception {
         UserUpdateRequestDTO userUpdateRequestDTO = new UserUpdateRequestDTO("test1", "test@123.com");
         UserResponseDTO userResponseDTO = new UserResponseDTO(1, "test1", "test@123.com");
-        Mockito.when(userService.putUserDetails(1, userUpdateRequestDTO)).thenReturn(userResponseDTO);
+        Mockito.when(userService.updateUser(1, userUpdateRequestDTO)).thenReturn(userResponseDTO);
         mockMvc.perform(put("/users/{userId}", 1)
                 .content(objectMapper.writeValueAsString(userUpdateRequestDTO))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -110,9 +109,9 @@ public class UserControllerTest {
     }
 
     @Test
-    void putUserDetails_shouldReturn404_whenNotFound() throws Exception {
+    void updateUser_shouldReturn404_whenNotFound() throws Exception {
         UserUpdateRequestDTO userUpdateRequestDTO = new UserUpdateRequestDTO("test1", "test@123.com");
-        Mockito.when(userService.putUserDetails(123, userUpdateRequestDTO))
+        Mockito.when(userService.updateUser(123, userUpdateRequestDTO))
                 .thenThrow(new UserNotFoundException("User not found"));
         mockMvc.perform(put("/users/{userId}", 123)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -121,19 +120,19 @@ public class UserControllerTest {
     }
 
     @Test
-    void deleteUserById_shouldReturn204() throws Exception {
+    void deleteUser_shouldReturn204() throws Exception {
         Integer mockUserId = 100;
         mockMvc.perform(delete("/users/{userId}", mockUserId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
-        Mockito.verify(userService).deleteUserByUserId(mockUserId);
+        Mockito.verify(userService).deleteUser(mockUserId);
     }
 
     @Test
-    void deleteUserById_shouldReturn404_whenNotFound() throws Exception {
+    void deleteUser_shouldReturn404_whenNotFound() throws Exception {
         Integer mockUserId = 123;
         Mockito.doThrow(new UserNotFoundException("User not found"))
-                .when(userService).deleteUserByUserId(mockUserId);
+                .when(userService).deleteUser(mockUserId);
         mockMvc.perform(delete("/users/{userId}", mockUserId))
                 .andExpect(status().isNotFound());
     }

@@ -1,4 +1,4 @@
-package com.wpn.personallibrarytracker.dto;
+package com.wpn.personallibrarytracker.dto.noteDTOs;
 
 import jakarta.validation.constraints.Min;
 

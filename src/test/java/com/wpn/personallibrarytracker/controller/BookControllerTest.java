@@ -1,6 +1,12 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.*;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
@@ -153,7 +159,7 @@ public class BookControllerTest {
                 1, "Amazing", 5
         );
 
-        BookDetailsResponseDTO response = new com.wpn.personallibrarytracker.dto.BookDetailsResponseDTO(
+        BookDetailsResponseDTO response = new BookDetailsResponseDTO(
                 bookId,
                 "The Hobbit",
                 "J.R.R. Tolkien",
@@ -165,7 +171,7 @@ public class BookControllerTest {
                 review
         );
 
-        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId))).thenReturn(response);
+        Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId))).thenReturn(response);
 
         // Act & Assert
         mockMvc.perform(get("/books/{userId}/{bookId}", userId, bookId)
@@ -181,12 +187,12 @@ public class BookControllerTest {
     }
 
     @Test
-    void getBookByBookIdUserId_shouldReturn404_whenUserNotFound() throws Exception {
+    void getBookIdUserByNotFound() throws Exception {
         // Arrange
         Integer userId = 999;
         Integer bookId = 101;
 
-        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId)))
+        Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId)))
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
@@ -201,7 +207,7 @@ public class BookControllerTest {
         Integer userId = 1;
         Integer bookId = 999;
 
-        Mockito.when(bookService.getBookByUser(eq(userId), eq(bookId)))
+        Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId)))
                 .thenThrow(new BookNotFoundForUserException("Book not found for user"));
 
         // Act & Assert
