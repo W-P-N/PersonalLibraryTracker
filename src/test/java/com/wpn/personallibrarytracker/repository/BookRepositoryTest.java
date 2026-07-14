@@ -98,4 +98,43 @@ public class BookRepositoryTest {
         Assertions.assertEquals(100, foundBook.getTotalPages());
         Assertions.assertEquals(savedUser.getUserId(), foundBook.getUser().getUserId());
     }
+    @Test
+    void existsByBookIdAndUserUserId_shouldReturnTrue_whenBookExistsForUser() {
+        // Arrange
+        User user = new User();
+        user.setUserName("testuser4");
+        user.setEmail("testuser4@mail.com");
+        user.setPassword("password");
+        User savedUser = userRepository.save(user);
+
+        Book book1 = new Book();
+        book1.setTitle("Title 1");
+        book1.setAuthor("Author 1");
+        book1.setTotalPages(100);
+        book1.setUser(savedUser);
+
+        Book savedBook = bookRepository.save(book1);
+
+        // Act
+        boolean exists = bookRepository.existsByBookIdAndUserUserId(savedBook.getBookId(), savedUser.getUserId());
+
+        // Assert
+        Assertions.assertTrue(exists);
+    }
+
+    @Test
+    void existsByBookIdAndUserUserId_shouldReturnFalse_whenBookDoesNotExistForUser() {
+        // Arrange
+        User user = new User();
+        user.setUserName("testuser5");
+        user.setEmail("testuser5@mail.com");
+        user.setPassword("password");
+        User savedUser = userRepository.save(user);
+
+        // Act
+        boolean exists = bookRepository.existsByBookIdAndUserUserId(999, savedUser.getUserId());
+
+        // Assert
+        Assertions.assertFalse(exists);
+    }
 }
