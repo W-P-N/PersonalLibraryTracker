@@ -15,4 +15,7 @@ public class Note {
     private String content;
     private LocalDateTime createdAt;
     private Integer pageNumber;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "book_id")
+    private Book book;
 }

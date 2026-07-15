@@ -4,8 +4,9 @@ import jakarta.validation.constraints.Min;
 
 import java.time.LocalDateTime;
 
-public record NoteResponseDTO(
+public record NoteDetailsResponseDTO(
         Integer noteId,
+        String content,
         LocalDateTime createdAt,
         Integer pageNumber
 ) {

@@ -24,6 +24,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @WebMvcTest(BookController.class)
@@ -153,7 +155,7 @@ public class BookControllerTest {
                 1, 50, 100, java.time.LocalDateTime.now()
         );
         NoteResponseDTO note = new NoteResponseDTO(
-                1, "Great book", java.time.LocalDateTime.now(), 10
+                1, LocalDateTime.now(), 10
         );
         ReviewResponseDTO review = new ReviewResponseDTO(
                 1, "Amazing", 5
