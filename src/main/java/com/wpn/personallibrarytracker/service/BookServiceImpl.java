@@ -114,7 +114,6 @@ public class BookServiceImpl implements BookService {
                 .stream()
                 .map(note -> new NoteResponseDTO(
                         note.getNoteId(),
-                        note.getContent(),
                         note.getCreatedAt(),
                         note.getPageNumber()
                 ))
