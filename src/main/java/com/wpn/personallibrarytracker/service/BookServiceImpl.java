@@ -26,26 +26,21 @@ public class BookServiceImpl implements BookService {
     private final UserRepository userRepository;
     private final Environment environment;
     private final BookRepository bookRepository;
-    private final ModelMapper modelMapper;
 
     public BookServiceImpl(
             UserRepository userRepository,
             Environment environment,
-            BookRepository bookRepository,
-            ModelMapper modelMapper
+            BookRepository bookRepository
     ) {
         this.userRepository = userRepository;
         this.environment = environment;
         this.bookRepository = bookRepository;
-        this.modelMapper = modelMapper;
     }
 
     @Transactional
     @Override
     public BookResponseDTO addBook(Integer userId, BookRequestDTO bookRequestDTO) {
-        User foundUser = userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException(environment.getProperty("Service.USER_NOT_FOUND"))
-        );
+        User foundUser = getUser(userId);
         Book newBook = new Book();
         newBook.setTitle(bookRequestDTO.title());
         newBook.setAuthor(bookRequestDTO.author());
@@ -70,9 +65,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public List<BookResponseDTO> getBooksByUser(Integer userId) {
-        User foundUser = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(
-                environment.getProperty("Service.USER_NOT_FOUND")
-        ));
+        User foundUser = getUser(userId);
         List<Book> bookList = bookRepository.findByUserUserId(foundUser.getUserId());
         if(bookList.isEmpty()) {
             return List.of();
@@ -94,15 +87,8 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public BookDetailsResponseDTO getBookDetails(Integer userId, Integer bookId) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId)
-                .orElseThrow(() -> new BookNotFoundForUserException(
-                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
-                ));
+        validateUserExists(userId);
+        Book foundBook = getBookByUser(bookId, userId);
         List<ReadingSessionResponseDTO> readingSessionResponseDTOList = foundBook.getReadingSessions()
                 .stream().map(readingSession -> new ReadingSessionResponseDTO(
                         readingSession.getReadingSessionId(),
@@ -142,15 +128,8 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public BookResponseDTO updateBook(Integer userId, Integer bookId, BookUpdateRequestDTO bookUpdateRequestDTO) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId)
-                .orElseThrow(() -> new BookNotFoundForUserException(
-                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
-                ));
+        validateUserExists(userId);
+        Book foundBook = getBookByUser(bookId, userId);
         if(bookUpdateRequestDTO.title() != null) {
             foundBook.setTitle(bookUpdateRequestDTO.title());
         }
@@ -180,15 +159,29 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void deleteBook(Integer userId, Integer bookId) {
+        validateUserExists(userId);
+        Book foundBook = getBookByUser(bookId, userId);
+        bookRepository.delete(foundBook);
+    }
+    // Utility functions
+    void validateUserExists(Integer userId) {
         if(!userRepository.existsById(userId)) {
             throw new UserNotFoundException(
                     environment.getProperty("Service.USER_NOT_FOUND")
             );
         };
-        Book foundBook = bookRepository.findByBookIdAndUserUserId(bookId, userId)
+    };
+
+    User getUser(Integer userId) {
+        return userRepository.findById(userId).orElseThrow(
+                () -> new UserNotFoundException(environment.getProperty("Service.USER_NOT_FOUND"))
+        );
+    };
+
+    Book getBookByUser(Integer bookId, Integer userId) {
+        return bookRepository.findByBookIdAndUserUserId(bookId, userId)
                 .orElseThrow(() -> new BookNotFoundForUserException(
                         environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
                 ));
-        bookRepository.delete(foundBook);
-    }
+    };
 }
