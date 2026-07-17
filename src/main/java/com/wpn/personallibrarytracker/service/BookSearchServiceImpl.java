@@ -5,6 +5,7 @@ import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -23,6 +24,7 @@ public class BookSearchServiceImpl implements BookSearchService {
     private Environment environment;
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookSearchResponseDTO> searchBooksByTerm(String searchTerm) {
         String url = UriComponentsBuilder
                 .fromUriString("https://www.googleapis.com/books/v1/volumes")
@@ -40,6 +42,7 @@ public class BookSearchServiceImpl implements BookSearchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookSearchResponseDTO searchBookByIsbn(String isbn) {
         String url = UriComponentsBuilder
                 .fromUriString("https://www.googleapis.com/books/v1/volumes")
