@@ -16,6 +16,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -40,6 +41,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     }
 
     @Override
+    @Transactional
     public ReadingSessionResponseDTO logSession(
             Integer userId,
             Integer bookId,
@@ -86,7 +88,10 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     }
 
     @Override
-    public Page<ReadingSessionResponseDTO> getSessions(Integer userId, Integer bookId, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<ReadingSessionResponseDTO> getSessions(
+            Integer userId, Integer bookId, Pageable pageable
+    ) {
         // Check if user exists
         validateUserExists(userId);
         // Check if book exists
@@ -104,7 +109,10 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     }
 
     @Override
-    public ReadingSessionResponseDTO getSessionById(Integer userId, Integer bookId, Integer sessionId) {
+    @Transactional(readOnly = true)
+    public ReadingSessionResponseDTO getSessionById(
+            Integer userId, Integer bookId, Integer sessionId
+    ) {
         // Check if user exists
         validateUserExists(userId);
         // Check if book exists
@@ -125,6 +133,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     }
 
     @Override
+    @Transactional
     public ReadingSessionResponseDTO updateSession(
             Integer userId,
             Integer bookId,
@@ -193,7 +202,10 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     }
 
     @Override
-    public void deleteSession(Integer userId, Integer bookId, Integer sessionId) {
+    @Transactional
+    public void deleteSession(
+            Integer userId, Integer bookId, Integer sessionId
+    ) {
         validateUserExists(userId);
         validateBookByUserExists(bookId,userId);
         ReadingSession foundReadingSession = readingSessionRepository

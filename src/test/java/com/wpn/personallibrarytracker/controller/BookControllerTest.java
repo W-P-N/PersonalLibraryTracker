@@ -67,7 +67,7 @@ public class BookControllerTest {
         mockMvc.perform(post("/users/{userId}/books", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.bookId").value(101))
                 .andExpect(jsonPath("$.title").value("The Hobbit"))
                 .andExpect(jsonPath("$.author").value("J.R.R. Tolkien"))

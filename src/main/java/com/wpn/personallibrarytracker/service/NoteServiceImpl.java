@@ -42,7 +42,9 @@ public class NoteServiceImpl implements NoteService{
     @Override
     @Transactional
     public NoteDetailsResponseDTO createNote(
-            Integer bookId, Integer userId, NoteRequestDTO noteRequestDTO
+            Integer bookId,
+            Integer userId,
+            NoteRequestDTO noteRequestDTO
     ) {
         validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
