@@ -50,6 +50,7 @@ public class NoteServiceImplTest {
         NoteRequestDTO request = new NoteRequestDTO("Test Content", 10);
         Book book = new Book();
         book.setBookId(1);
+        book.setTotalPages(100);
         
         when(userRepository.existsById(1)).thenReturn(true);
         when(bookRepository.findByBookIdAndUserUserId(1, 1)).thenReturn(Optional.of(book));
@@ -182,7 +183,11 @@ public class NoteServiceImplTest {
     @Test
     void updateNote_happyPath_shouldReturnNoteDetailsResponseDTO() {
         when(userRepository.existsById(1)).thenReturn(true);
-        when(bookRepository.existsByBookIdAndUserUserId(1, 1)).thenReturn(true);
+        Book foundBook = new Book();
+        foundBook.setBookId(1);
+        foundBook.setTotalPages(100);
+        when(bookRepository.findByBookIdAndUserUserId(1, 1))
+                .thenReturn(Optional.of(foundBook));
         
         Note note = new Note();
         note.setNoteId(100);
@@ -194,7 +199,9 @@ public class NoteServiceImplTest {
         when(noteRepository.save(any(Note.class))).thenReturn(note); 
 
         NoteRequestDTO request = new NoteRequestDTO("New Content", 10);
-        NoteDetailsResponseDTO result = noteService.updateNote(100, 1, 1, request);
+        NoteDetailsResponseDTO result = noteService.updateNote(
+                note.getNoteId(), foundBook.getBookId(), 1, request
+        );
 
         Assertions.assertEquals(100, result.noteId());
         Assertions.assertEquals("New Content", result.content());
@@ -213,8 +220,8 @@ public class NoteServiceImplTest {
     @Test
     void updateNote_unHappyPath_shouldThrowBookNotFoundForUserException() {
         when(userRepository.existsById(1)).thenReturn(true);
-        when(bookRepository.existsByBookIdAndUserUserId(1, 1)).thenReturn(false);
-        when(environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")).thenReturn("Book not found");
+        when(bookRepository.findByBookIdAndUserUserId(1, 1))
+                .thenThrow(BookNotFoundForUserException.class);
 
         NoteRequestDTO request = new NoteRequestDTO("New Content", 10);
         Assertions.assertThrows(BookNotFoundForUserException.class, () -> noteService.updateNote(100, 1, 1, request));
@@ -222,13 +229,28 @@ public class NoteServiceImplTest {
 
     @Test
     void updateNote_unHappyPath_shouldThrowNoteNotFoundException() {
+        // Arrange
+        Book book = new Book();
+        book.setBookId(1);
+        book.setTotalPages(200);
+
         when(userRepository.existsById(1)).thenReturn(true);
-        when(bookRepository.existsByBookIdAndUserUserId(1, 1)).thenReturn(true);
-        when(noteRepository.findByNoteIdAndBookBookIdAndBookUserUserId(100, 1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.NOTE_NOT_FOUND")).thenReturn("Note not found");
+        when(bookRepository.findByBookIdAndUserUserId(1, 1))
+                .thenReturn(Optional.of(book));
+        when(noteRepository.findByNoteIdAndBookBookIdAndBookUserUserId(100, 1, 1))
+                .thenReturn(Optional.empty());
+        when(environment.getProperty("Service.NOTE_NOT_FOUND"))
+                .thenReturn("Note not found");
 
         NoteRequestDTO request = new NoteRequestDTO("New Content", 10);
-        Assertions.assertThrows(NoteNotFoundException.class, () -> noteService.updateNote(100, 1, 1, request));
+
+        // Act & Assert
+        Assertions.assertThrows(
+                NoteNotFoundException.class,
+                () -> noteService.updateNote(100, 1, 1, request)
+        );
+
+        verify(noteRepository, never()).save(any());
     }
 
     // --- Delete Note Tests ---

@@ -46,7 +46,7 @@ public class ReadingSessionControllerTest {
         mockMvc.perform(post("/users/1/books/100/sessions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.readingSessionId").value(1))
                 .andExpect(jsonPath("$.endSessionPageNumber").value(50));
     }
