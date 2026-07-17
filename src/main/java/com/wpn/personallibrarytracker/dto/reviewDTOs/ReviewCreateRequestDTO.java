@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record ReviewCreateRequestDTO(
         @NotBlank
-        String constraint,
+        String content,
         @NotNull
         @Min(1)
         @Max(5)
