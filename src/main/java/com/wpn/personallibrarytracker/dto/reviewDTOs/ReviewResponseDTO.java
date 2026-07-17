@@ -1,8 +1,10 @@
 package com.wpn.personallibrarytracker.dto.reviewDTOs;
 
+import java.time.LocalDateTime;
+
 public record ReviewResponseDTO(
-        Integer reviewId,
         String content,
-        Integer rating
+        Integer rating,
+        LocalDateTime createdAt
 ) {
 }
