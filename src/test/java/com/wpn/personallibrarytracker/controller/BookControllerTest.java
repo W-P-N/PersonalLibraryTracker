@@ -158,7 +158,7 @@ public class BookControllerTest {
                 1, LocalDateTime.now(), 10
         );
         ReviewResponseDTO review = new ReviewResponseDTO(
-                1, "Amazing", 5
+                "Amazing", 1, LocalDateTime.now()
         );
 
         BookDetailsResponseDTO response = new BookDetailsResponseDTO(
