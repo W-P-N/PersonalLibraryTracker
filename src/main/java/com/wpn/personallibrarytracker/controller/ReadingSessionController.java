@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,11 @@ public class ReadingSessionController {
             @RequestBody ReadingSessionRequestDTO readingSessionRequestDTO
             ) {
 
-        return ResponseEntity.ok(
-                readingSessionService.logSession(userId, bookId, readingSessionRequestDTO)
+        return new ResponseEntity<>(
+                readingSessionService.logSession(
+                        userId, bookId, readingSessionRequestDTO
+                ),
+                HttpStatus.CREATED
         );
     }
 

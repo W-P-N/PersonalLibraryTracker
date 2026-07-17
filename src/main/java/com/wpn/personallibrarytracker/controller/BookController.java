@@ -9,6 +9,7 @@ import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,10 @@ public class BookController {
             @RequestBody BookRequestDTO bookRequestDTO
             ) {
         BookResponseDTO bookResponseDTO = bookService.addBook(userId, bookRequestDTO);
-        return ResponseEntity.ok(bookResponseDTO);
+        return new ResponseEntity<>(
+                bookResponseDTO,
+                HttpStatus.CREATED
+        );
     }
 
     @GetMapping
