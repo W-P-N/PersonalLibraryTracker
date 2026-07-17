@@ -89,7 +89,9 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReadingSessionResponseDTO> getSessions(Integer userId, Integer bookId, Pageable pageable) {
+    public Page<ReadingSessionResponseDTO> getSessions(
+            Integer userId, Integer bookId, Pageable pageable
+    ) {
         // Check if user exists
         validateUserExists(userId);
         // Check if book exists
@@ -108,7 +110,9 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
 
     @Override
     @Transactional(readOnly = true)
-    public ReadingSessionResponseDTO getSessionById(Integer userId, Integer bookId, Integer sessionId) {
+    public ReadingSessionResponseDTO getSessionById(
+            Integer userId, Integer bookId, Integer sessionId
+    ) {
         // Check if user exists
         validateUserExists(userId);
         // Check if book exists
@@ -199,7 +203,9 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
 
     @Override
     @Transactional
-    public void deleteSession(Integer userId, Integer bookId, Integer sessionId) {
+    public void deleteSession(
+            Integer userId, Integer bookId, Integer sessionId
+    ) {
         validateUserExists(userId);
         validateBookByUserExists(bookId,userId);
         ReadingSession foundReadingSession = readingSessionRepository
