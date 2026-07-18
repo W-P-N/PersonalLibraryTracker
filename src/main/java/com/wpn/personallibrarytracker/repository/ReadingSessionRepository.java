@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface ReadingSessionRepository extends JpaRepository<ReadingSession, Integer> {
@@ -25,5 +26,6 @@ public interface ReadingSessionRepository extends JpaRepository<ReadingSession, 
     );
     Optional<ReadingSession> findByReadingSessionIdAndBookBookIdAndBookUserUserId(
             Integer readingSessionId, Integer bookId, Integer userId);
+    List<ReadingSession> findAllByBookUserUserIdOrderBySessionDateTimeDesc(Integer userId);
 
 }

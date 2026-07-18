@@ -10,4 +10,5 @@ public interface BookRepository extends JpaRepository<Book, Integer> {
     List<Book> findByUserUserId(Integer userId);
     Optional<Book> findByBookIdAndUserUserId(Integer bookId, Integer userId);
     boolean existsByBookIdAndUserUserId(Integer bookId, Integer userId);
+    Long countByUserUserId(Integer userId);
 }

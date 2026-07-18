@@ -103,4 +103,46 @@ public class ReviewRepositoryTest {
         // Assert
         assertEquals(Optional.empty(), foundReviewOptional);
     }
+
+    @Test
+    void findAverageRatingByUserId_happyPath_shouldReturnAverageRating() {
+        // Arrange
+        User foundUser = new User();
+        testEntityManager.persist(foundUser);
+        
+        Book foundBook1 = new Book();
+        foundBook1.setUser(foundUser);
+        testEntityManager.persist(foundBook1);
+        Review foundReview1 = new Review();
+        foundReview1.setBook(foundBook1);
+        foundReview1.setRating(4);
+        testEntityManager.persist(foundReview1);
+
+        Book foundBook2 = new Book();
+        foundBook2.setUser(foundUser);
+        testEntityManager.persist(foundBook2);
+        Review foundReview2 = new Review();
+        foundReview2.setBook(foundBook2);
+        foundReview2.setRating(5);
+        testEntityManager.persist(foundReview2);
+
+        // Act
+        Double averageRating = reviewRepository.findAverageRatingByUserId(foundUser.getUserId());
+
+        // Assert
+        assertEquals(4.5, averageRating);
+    }
+
+    @Test
+    void findAverageRatingByUserId_unHappyPath_shouldReturnNull() {
+        // Arrange
+        User foundUser = new User();
+        testEntityManager.persist(foundUser);
+
+        // Act
+        Double averageRating = reviewRepository.findAverageRatingByUserId(foundUser.getUserId());
+
+        // Assert
+        assertNull(averageRating);
+    }
 }
