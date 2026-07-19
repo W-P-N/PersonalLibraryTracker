@@ -538,4 +538,72 @@ public class ReadingSessionRepositoryTest {
         Assertions.assertTrue(result.isEmpty());
     }
 
+    @Test
+    void findAllByBookUserUserIdOrderBySessionDateTimeDesc_shouldReturnSessionsInDescendingOrder() {
+        // Arrange
+        User user = new User();
+        user.setUserName("testuser8");
+        user.setEmail("testuser8@mail.com");
+        user.setPassword("password");
+        User savedUser = userRepository.save(user);
+
+        Book book1 = new Book();
+        book1.setTitle("Title 1");
+        book1.setAuthor("Author 1");
+        book1.setTotalPages(100);
+        book1.setUser(savedUser);
+        Book savedBook1 = bookRepository.save(book1);
+
+        Book book2 = new Book();
+        book2.setTitle("Title 2");
+        book2.setAuthor("Author 2");
+        book2.setTotalPages(200);
+        book2.setUser(savedUser);
+        Book savedBook2 = bookRepository.save(book2);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        ReadingSession session1 = new ReadingSession();
+        session1.setBook(savedBook1);
+        session1.setEndSessionPageNumber(10);
+        session1.setSessionDateTime(now.minusDays(2));
+        ReadingSession savedSession1 = readingSessionRepository.save(session1);
+
+        ReadingSession session2 = new ReadingSession();
+        session2.setBook(savedBook2);
+        session2.setEndSessionPageNumber(20);
+        session2.setSessionDateTime(now);
+        ReadingSession savedSession2 = readingSessionRepository.save(session2);
+
+        ReadingSession session3 = new ReadingSession();
+        session3.setBook(savedBook1);
+        session3.setEndSessionPageNumber(30);
+        session3.setSessionDateTime(now.minusDays(1));
+        ReadingSession savedSession3 = readingSessionRepository.save(session3);
+
+        // Act
+        List<ReadingSession> results = readingSessionRepository.findAllByBookUserUserIdOrderBySessionDateTimeDesc(savedUser.getUserId());
+
+        // Assert
+        Assertions.assertEquals(3, results.size());
+        Assertions.assertEquals(savedSession2.getReadingSessionId(), results.get(0).getReadingSessionId());
+        Assertions.assertEquals(savedSession3.getReadingSessionId(), results.get(1).getReadingSessionId());
+        Assertions.assertEquals(savedSession1.getReadingSessionId(), results.get(2).getReadingSessionId());
+    }
+
+    @Test
+    void findAllByBookUserUserIdOrderBySessionDateTimeDesc_shouldReturnEmptyListWhenUserHasNoSessions() {
+        // Arrange
+        User user = new User();
+        user.setUserName("testuser9");
+        user.setEmail("testuser9@mail.com");
+        user.setPassword("password");
+        User savedUser = userRepository.save(user);
+
+        // Act
+        List<ReadingSession> results = readingSessionRepository.findAllByBookUserUserIdOrderBySessionDateTimeDesc(savedUser.getUserId());
+
+        // Assert
+        Assertions.assertTrue(results.isEmpty());
+    }
 }

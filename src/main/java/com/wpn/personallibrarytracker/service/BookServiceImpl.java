@@ -106,9 +106,9 @@ public class BookServiceImpl implements BookService {
                 .toList();
         ReviewResponseDTO reviewResponseDTO = foundBook.getReview() != null ?
                 new ReviewResponseDTO(
-                        foundBook.getReview().getReviewId(),
                         foundBook.getReview().getContent(),
-                        foundBook.getReview().getRating()
+                        foundBook.getReview().getRating(),
+                        foundBook.getReview().getCreatedAt()
                 )
                 :
                 null;

@@ -137,4 +137,51 @@ public class BookRepositoryTest {
         // Assert
         Assertions.assertFalse(exists);
     }
+
+    @Test
+    void countByUserUserId_shouldReturnCountOfBooks_whenUserHasBooks() {
+        // Arrange
+        User user = new User();
+        user.setUserName("testuser6");
+        user.setEmail("testuser6@mail.com");
+        user.setPassword("password");
+        User savedUser = userRepository.save(user);
+
+        Book book1 = new Book();
+        book1.setTitle("Title 1");
+        book1.setAuthor("Author 1");
+        book1.setTotalPages(100);
+        book1.setUser(savedUser);
+
+        Book book2 = new Book();
+        book2.setTitle("Title 2");
+        book2.setAuthor("Author 2");
+        book2.setTotalPages(200);
+        book2.setUser(savedUser);
+
+        bookRepository.save(book1);
+        bookRepository.save(book2);
+
+        // Act
+        Long count = bookRepository.countByUserUserId(savedUser.getUserId());
+
+        // Assert
+        Assertions.assertEquals(2L, count);
+    }
+
+    @Test
+    void countByUserUserId_shouldReturnZero_whenUserHasNoBooks() {
+        // Arrange
+        User user = new User();
+        user.setUserName("testuser7");
+        user.setEmail("testuser7@mail.com");
+        user.setPassword("password");
+        User savedUser = userRepository.save(user);
+
+        // Act
+        Long count = bookRepository.countByUserUserId(savedUser.getUserId());
+
+        // Assert
+        Assertions.assertEquals(0L, count);
+    }
 }
