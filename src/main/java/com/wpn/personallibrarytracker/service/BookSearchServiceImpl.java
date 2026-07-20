@@ -2,6 +2,7 @@ package com.wpn.personallibrarytracker.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
+import com.wpn.personallibrarytracker.exceptions.UnableToSearchBookException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,14 @@ public class BookSearchServiceImpl implements BookSearchService {
                 .queryParam("q", searchTerm)
                 .queryParam("key", environment.getProperty("BOOKS_API_KEY"))
                 .toUriString();
-        GoogleBooksResponse response = restTemplate.getForObject(url, GoogleBooksResponse.class);
+        GoogleBooksResponse response;
+        try {
+            response = restTemplate.getForObject(url, GoogleBooksResponse.class);
+        } catch (Exception e) {
+            throw new UnableToSearchBookException(
+                    environment.getProperty("Service.UNABLE_TO_SEARCH_BOOK")
+            );
+        }
         if (response == null || response.items() == null) {
             return new ArrayList<>();
         }
@@ -49,7 +57,14 @@ public class BookSearchServiceImpl implements BookSearchService {
                 .queryParam("q", "isbn:" + isbn)
                 .queryParam("key", environment.getProperty("BOOKS_API_KEY"))
                 .toUriString();
-        GoogleBooksResponse response = restTemplate.getForObject(url, GoogleBooksResponse.class);
+        GoogleBooksResponse response;
+        try {
+            response = restTemplate.getForObject(url, GoogleBooksResponse.class);
+        } catch (Exception e) {
+            throw new UnableToSearchBookException(
+                    environment.getProperty("Service.UNABLE_TO_SEARCH_BOOK")
+            );
+        }
         if (response != null && response.items() != null && !response.items().isEmpty()) {
             return mapToResponseDTO(response.items().get(0));
         }
