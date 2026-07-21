@@ -56,9 +56,9 @@ public class BookServiceImplTest {
         BookRequestDTO requestDTO = new BookRequestDTO(
                 "The Hobbit",
                 "J.R.R. Tolkien",
+                310,
                 "9780007525492",
-                "https://example.com/cover.jpg",
-                310
+                "https://example.com/cover.jpg"
         );
 
         User user = new User();
@@ -101,9 +101,9 @@ public class BookServiceImplTest {
         BookRequestDTO requestDTO = new BookRequestDTO(
                 "The Hobbit",
                 "J.R.R. Tolkien",
-                "9780007525492",
+                310,
                 "https://example.com/cover.jpg",
-                310
+                "9780007525492"
         );
 
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());

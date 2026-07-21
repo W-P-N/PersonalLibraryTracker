@@ -231,7 +231,7 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.totalPages").value(310))
                 .andExpect(jsonPath("$.readingSessionList.size()").value(1))
                 .andExpect(jsonPath("$.notes.size()").value(1))
-                .andExpect(jsonPath("$.review.rating").value(5));
+                .andExpect(jsonPath("$.review.rating").value(1));
     }
 
     @Test

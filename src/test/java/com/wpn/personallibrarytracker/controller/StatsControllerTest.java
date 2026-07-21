@@ -38,7 +38,7 @@ public class StatsControllerTest {
         Mockito.when(statsService.getStats(userId)).thenReturn(mockResponse);
 
         // Act & Assert
-        mockMvc.perform(MockMvcRequestBuilders.get("/users/{userId}", userId))
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/{userId}/stats", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalBooks").value(10))
                 .andExpect(jsonPath("$.booksNotStarted").value(2))
@@ -56,7 +56,7 @@ public class StatsControllerTest {
         Mockito.when(statsService.getStats(userId)).thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
-        mockMvc.perform(MockMvcRequestBuilders.get("/users/{userId}", userId))
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/{userId}/stats", userId))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage").value("User not found"));
     }
