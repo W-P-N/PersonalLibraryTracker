@@ -4,6 +4,7 @@ import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewUpdateRequestDTO;
 import com.wpn.personallibrarytracker.service.ReviewService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class ReviewController {
     public ResponseEntity<ReviewResponseDTO> addReview(
             @PathVariable Integer userId,
             @PathVariable Integer bookId,
-            @RequestBody ReviewCreateRequestDTO reviewCreateRequestDTO
+            @RequestBody @Valid ReviewCreateRequestDTO reviewCreateRequestDTO
     ) {
         return new ResponseEntity<>(
                 reviewService.addReview(
@@ -50,7 +51,7 @@ public class ReviewController {
     public ResponseEntity<ReviewResponseDTO> updateReview(
             @PathVariable Integer userId,
             @PathVariable Integer bookId,
-            @RequestBody ReviewUpdateRequestDTO reviewUpdateRequestDTO
+            @RequestBody @Valid ReviewUpdateRequestDTO reviewUpdateRequestDTO
     ) {
         return ResponseEntity.ok(
                 reviewService.updateReview(
