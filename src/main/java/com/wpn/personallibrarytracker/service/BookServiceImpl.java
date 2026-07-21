@@ -38,6 +38,7 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @Override
     public BookResponseDTO addBook(Integer userId, BookRequestDTO bookRequestDTO) {
+        // Check if book already exists - business decision pending
         User foundUser = getUser(userId);
         Book newBook = new Book();
         newBook.setTitle(bookRequestDTO.title());
