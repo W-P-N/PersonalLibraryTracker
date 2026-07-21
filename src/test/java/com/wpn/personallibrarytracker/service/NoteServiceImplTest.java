@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.service;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.Note;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
@@ -198,7 +199,7 @@ public class NoteServiceImplTest {
         when(noteRepository.findByNoteIdAndBookBookIdAndBookUserUserId(100, 1, 1)).thenReturn(Optional.of(note));
         when(noteRepository.save(any(Note.class))).thenReturn(note); 
 
-        NoteRequestDTO request = new NoteRequestDTO("New Content", 10);
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("New Content", 10);
         NoteDetailsResponseDTO result = noteService.updateNote(
                 note.getNoteId(), foundBook.getBookId(), 1, request
         );
@@ -213,7 +214,7 @@ public class NoteServiceImplTest {
         when(userRepository.existsById(1)).thenReturn(false);
         when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
 
-        NoteRequestDTO request = new NoteRequestDTO("New Content", 10);
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("New Content", 10);
         Assertions.assertThrows(UserNotFoundException.class, () -> noteService.updateNote(100, 1, 1, request));
     }
 
@@ -223,7 +224,7 @@ public class NoteServiceImplTest {
         when(bookRepository.findByBookIdAndUserUserId(1, 1))
                 .thenThrow(BookNotFoundForUserException.class);
 
-        NoteRequestDTO request = new NoteRequestDTO("New Content", 10);
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("New Content", 10);
         Assertions.assertThrows(BookNotFoundForUserException.class, () -> noteService.updateNote(100, 1, 1, request));
     }
 
@@ -242,7 +243,7 @@ public class NoteServiceImplTest {
         when(environment.getProperty("Service.NOTE_NOT_FOUND"))
                 .thenReturn("Note not found");
 
-        NoteRequestDTO request = new NoteRequestDTO("New Content", 10);
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("New Content", 10);
 
         // Act & Assert
         Assertions.assertThrows(

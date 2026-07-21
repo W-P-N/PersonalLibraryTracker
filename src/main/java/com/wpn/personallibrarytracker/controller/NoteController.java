@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.controller;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteUpdateRequestDTO;
 import com.wpn.personallibrarytracker.service.NoteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,14 +75,14 @@ public class NoteController {
             @PathVariable Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer noteId,
-            @RequestBody @Valid NoteRequestDTO noteRequestDTO
+            @RequestBody @Valid NoteUpdateRequestDTO noteUpdateRequestDTO
     ) {
         return ResponseEntity.ok(
                 noteService.updateNote(
                         noteId,
                         bookId,
                         userId,
-                        noteRequestDTO
+                        noteUpdateRequestDTO
                 )
         );
     }
