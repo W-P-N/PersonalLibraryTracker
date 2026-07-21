@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.controller;
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionRequestDTO;
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
 import com.wpn.personallibrarytracker.service.ReadingSessionService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,8 +28,8 @@ public class ReadingSessionController {
     public ResponseEntity<ReadingSessionResponseDTO> addSession(
             @PathVariable Integer userId,
             @PathVariable Integer bookId,
-            @RequestBody ReadingSessionRequestDTO readingSessionRequestDTO
-            ) {
+            @RequestBody @Valid ReadingSessionRequestDTO readingSessionRequestDTO
+    ) {
 
         return new ResponseEntity<>(
                 readingSessionService.logSession(
@@ -67,7 +68,7 @@ public class ReadingSessionController {
             @PathVariable Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer sessionId,
-            @RequestBody ReadingSessionRequestDTO readingSessionRequestDTO
+            @RequestBody @Valid ReadingSessionRequestDTO readingSessionRequestDTO
     ) {
         return ResponseEntity.ok(
                 readingSessionService.updateSession(
