@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.service;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.Note;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
@@ -113,24 +114,24 @@ public class NoteServiceImpl implements NoteService{
             Integer noteId,
             Integer bookId,
             Integer userId,
-            NoteRequestDTO noteRequestDTO
+            NoteUpdateRequestDTO noteUpdateRequestDTO
     ) {
         validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
         if(
-                noteRequestDTO.pageNumber() != null && 
-                noteRequestDTO.pageNumber() > foundBook.getTotalPages()
+                noteUpdateRequestDTO.pageNumber() != null &&
+                noteUpdateRequestDTO.pageNumber() > foundBook.getTotalPages()
         ) {
             throw new InvalidPageNumberException(
                     environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK")
             );
         };
         Note foundNote = getNoteByBookAndUser(noteId, bookId, userId);
-        if(noteRequestDTO.pageNumber() != null) {
-            foundNote.setPageNumber(noteRequestDTO.pageNumber());
+        if(noteUpdateRequestDTO.pageNumber() != null) {
+            foundNote.setPageNumber(noteUpdateRequestDTO.pageNumber());
         }
-        if(noteRequestDTO.content() != null) {
-            foundNote.setContent(noteRequestDTO.content());
+        if(noteUpdateRequestDTO.content() != null) {
+            foundNote.setContent(noteUpdateRequestDTO.content());
         }
         Note updatedNote = noteRepository.save(foundNote);
         return new NoteDetailsResponseDTO(

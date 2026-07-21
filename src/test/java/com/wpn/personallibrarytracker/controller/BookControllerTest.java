@@ -7,6 +7,7 @@ import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookFromSearchRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
@@ -28,6 +29,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 @WebMvcTest(BookController.class)
 public class BookControllerTest {
 
@@ -47,9 +53,9 @@ public class BookControllerTest {
         BookRequestDTO request = new BookRequestDTO(
                 "The Hobbit",
                 "J.R.R. Tolkien",
+                310,
                 "9780007525492",
-                "https://example.com/cover.jpg",
-                310
+                "https://example.com/cover.jpg"
         );
 
         BookResponseDTO response = new BookResponseDTO(
@@ -83,9 +89,9 @@ public class BookControllerTest {
         BookRequestDTO request = new BookRequestDTO(
                 "The Hobbit",
                 "J.R.R. Tolkien",
+                310,
                 "9780007525492",
-                "https://example.com/cover.jpg",
-                310
+                "https://example.com/cover.jpg"
         );
 
         Mockito.when(bookService.addBook(eq(userId), any(BookRequestDTO.class)))
@@ -96,6 +102,42 @@ public class BookControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addBookFromSearch_shouldReturn201AndBookResponseDTO_whenValidInput() throws Exception {
+        // Arrange
+        Integer userId = 1;
+        BookFromSearchRequestDTO request = new BookFromSearchRequestDTO(
+                "The Hobbit",
+                "J.R.R. Tolkien",
+                310,
+                "9780007525492",
+                "https://example.com/cover.jpg"
+        );
+
+        BookResponseDTO response = new BookResponseDTO(
+                101,
+                "The Hobbit",
+                "J.R.R. Tolkien",
+                "9780007525492",
+                "https://example.com/cover.jpg",
+                310
+        );
+
+        Mockito.when(bookService.addBookFromSearch(eq(userId), any(BookFromSearchRequestDTO.class))).thenReturn(response);
+
+        // Act & Assert
+        mockMvc.perform(post("/users/{userId}/books/from-search", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.bookId").value(101))
+                .andExpect(jsonPath("$.title").value("The Hobbit"))
+                .andExpect(jsonPath("$.author").value("J.R.R. Tolkien"))
+                .andExpect(jsonPath("$.isbn").value("9780007525492"))
+                .andExpect(jsonPath("$.coverUrl").value("https://example.com/cover.jpg"))
+                .andExpect(jsonPath("$.totalPages").value(310));
     }
 
     @Test
@@ -119,24 +161,28 @@ public class BookControllerTest {
                 365
         );
 
-        Mockito.when(bookService.getBooksByUser(userId)).thenReturn(List.of(book1, book2));
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<BookResponseDTO> pagedResponse = new PageImpl<>(List.of(book1, book2), pageable, 2);
+        Mockito.when(bookService.getBooksByUser(eq(userId), any(Pageable.class))).thenReturn(pagedResponse);
 
         // Act & Assert
         mockMvc.perform(get("/users/{userId}/books", userId)
+                .param("pageNumber", "0")
+                .param("pageSize", "5")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(2))
-                .andExpect(jsonPath("$[0].bookId").value(101))
-                .andExpect(jsonPath("$[0].title").value("The Hobbit"))
-                .andExpect(jsonPath("$[1].bookId").value(102))
-                .andExpect(jsonPath("$[1].title").value("The Silmarillion"));
+                .andExpect(jsonPath("$.content.size()").value(2))
+                .andExpect(jsonPath("$.content[0].bookId").value(101))
+                .andExpect(jsonPath("$.content[0].title").value("The Hobbit"))
+                .andExpect(jsonPath("$.content[1].bookId").value(102))
+                .andExpect(jsonPath("$.content[1].title").value("The Silmarillion"));
     }
 
     @Test
     void getBooks_shouldReturn404_whenUserNotFound() throws Exception {
         // Arrange
         Integer userId = 999;
-        Mockito.when(bookService.getBooksByUser(userId))
+        Mockito.when(bookService.getBooksByUser(eq(userId), any(Pageable.class)))
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert

@@ -1,15 +1,13 @@
 package com.wpn.personallibrarytracker.dto.bookDTOs;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record BookRequestDTO(
+public record BookFromSearchRequestDTO(
         @NotBlank
         String title,
         @NotBlank
         String author,
-        @Min(1)
         @NotNull
         Integer totalPages,
         String isbn,

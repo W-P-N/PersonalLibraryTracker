@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.controller;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.NoteNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
@@ -150,10 +151,10 @@ public class NoteControllerTest {
     // -- Update Note Tests ---
     @Test
     void updateNote_happyPath_shouldReturnUpdatedNote() throws Exception {
-        NoteRequestDTO request = new NoteRequestDTO("Updated Note", 15);
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("Updated Note", 15);
         NoteDetailsResponseDTO response = new NoteDetailsResponseDTO(1, "Updated Note", LocalDateTime.now(), 15);
 
-        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteRequestDTO.class))).thenReturn(response);
+        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteUpdateRequestDTO.class))).thenReturn(response);
 
         mockMvc.perform(patch("/users/1/books/1/notes/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -164,8 +165,8 @@ public class NoteControllerTest {
 
     @Test
     void updateNote_unHappyPath_shouldThrow404UserNotFoundException() throws Exception {
-        NoteRequestDTO request = new NoteRequestDTO("Updated Note", 15);
-        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteRequestDTO.class)))
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("Updated Note", 15);
+        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteUpdateRequestDTO.class)))
                 .thenThrow(new UserNotFoundException("User not found"));
 
         mockMvc.perform(patch("/users/1/books/1/notes/1")
@@ -176,8 +177,8 @@ public class NoteControllerTest {
 
     @Test
     void updateNote_unHappyPath_shouldThrow404BookNotFoundForUserException() throws Exception {
-        NoteRequestDTO request = new NoteRequestDTO("Updated Note", 15);
-        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteRequestDTO.class)))
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("Updated Note", 15);
+        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteUpdateRequestDTO.class)))
                 .thenThrow(new BookNotFoundForUserException("Book not found"));
 
         mockMvc.perform(patch("/users/1/books/1/notes/1")
@@ -188,8 +189,8 @@ public class NoteControllerTest {
 
     @Test
     void updateNote_unHappyPath_shouldThrow404NoteNotFoundException() throws Exception {
-        NoteRequestDTO request = new NoteRequestDTO("Updated Note", 15);
-        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteRequestDTO.class)))
+        NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("Updated Note", 15);
+        when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteUpdateRequestDTO.class)))
                 .thenThrow(new NoteNotFoundException("Note not found"));
 
         mockMvc.perform(patch("/users/1/books/1/notes/1")

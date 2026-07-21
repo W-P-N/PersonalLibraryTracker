@@ -26,6 +26,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookFromSearchRequestDTO;
+
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -129,16 +135,17 @@ public class BookServiceImplTest {
         book.setTotalPages(310);
 
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        Mockito.when(bookRepository.findByUserUserId(userId)).thenReturn(List.of(book));
+        Pageable pageable = PageRequest.of(0, 5);
+        Mockito.when(bookRepository.findByUserUserId(userId, pageable)).thenReturn(new PageImpl<>(List.of(book)));
 
         // Act
-        List<BookResponseDTO> response = bookService.getBooksByUser(userId);
+        Page<BookResponseDTO> response = bookService.getBooksByUser(userId, pageable);
 
         // Assert
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(1, response.size());
-        Assertions.assertEquals(101, response.get(0).bookId());
-        Assertions.assertEquals("The Hobbit", response.get(0).title());
+        Assertions.assertEquals(1, response.getContent().size());
+        Assertions.assertEquals(101, response.getContent().get(0).bookId());
+        Assertions.assertEquals("The Hobbit", response.getContent().get(0).title());
     }
 
     @Test
@@ -149,10 +156,11 @@ public class BookServiceImplTest {
         user.setUserId(userId);
 
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        Mockito.when(bookRepository.findByUserUserId(userId)).thenReturn(List.of());
+        Pageable pageable = PageRequest.of(0, 5);
+        Mockito.when(bookRepository.findByUserUserId(userId, pageable)).thenReturn(Page.empty());
 
         // Act
-        List<BookResponseDTO> response = bookService.getBooksByUser(userId);
+        Page<BookResponseDTO> response = bookService.getBooksByUser(userId, pageable);
 
         // Assert
         Assertions.assertNotNull(response);
@@ -168,13 +176,59 @@ public class BookServiceImplTest {
         Mockito.when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
 
         // Act & Assert
+        Pageable pageable = PageRequest.of(0, 5);
         UserNotFoundException exception = Assertions.assertThrows(
                 UserNotFoundException.class,
-                () -> bookService.getBooksByUser(userId)
+                () -> bookService.getBooksByUser(userId, pageable)
         );
 
         Assertions.assertEquals("User not found", exception.getMessage());
-        Mockito.verify(bookRepository, Mockito.never()).findByUserUserId(any());
+        Mockito.verify(bookRepository, Mockito.never()).findByUserUserId(any(), any());
+    }
+
+    @Test
+    public void addBookFromSearch_shouldSaveBookAndAssociateWithUser_whenUserExists() {
+        // Arrange
+        Integer userId = 1;
+        BookFromSearchRequestDTO requestDTO = new BookFromSearchRequestDTO(
+                "The Hobbit",
+                "J.R.R. Tolkien",
+                310,
+                "9780007525492",
+                "https://example.com/cover.jpg"
+        );
+
+        User user = new User();
+        user.setUserId(userId);
+        user.setUserName("john_doe");
+        user.setEmail("john@example.com");
+        user.setBooks(new ArrayList<>());
+
+        Book savedBook = new Book();
+        savedBook.setBookId(101);
+        savedBook.setTitle(requestDTO.title());
+        savedBook.setAuthor(requestDTO.author());
+        savedBook.setIsbn(requestDTO.isbn());
+        savedBook.setCoverUrl(requestDTO.coverUrl());
+        savedBook.setTotalPages(requestDTO.totalPages());
+
+        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        Mockito.when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
+
+        // Act
+        BookResponseDTO response = bookService.addBookFromSearch(userId, requestDTO);
+
+        // Assert
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(101, response.bookId());
+        Assertions.assertEquals("The Hobbit", response.title());
+        Assertions.assertEquals("J.R.R. Tolkien", response.author());
+        Assertions.assertEquals("9780007525492", response.isbn());
+        Assertions.assertEquals("https://example.com/cover.jpg", response.coverUrl());
+        Assertions.assertEquals(310, response.totalPages());
+
+        Assertions.assertEquals(1, user.getBooks().size());
+        Assertions.assertEquals(savedBook, user.getBooks().get(0));
     }
 
     @Test

@@ -1,9 +1,6 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.*;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
@@ -15,6 +12,8 @@ import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.env.Environment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,13 +63,44 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public List<BookResponseDTO> getBooksByUser(Integer userId) {
+    public BookResponseDTO addBookFromSearch(
+            Integer userId,
+            BookFromSearchRequestDTO bookFromSearchRequestDTO
+    ) {
         User foundUser = getUser(userId);
-        List<Book> bookList = bookRepository.findByUserUserId(foundUser.getUserId());
-        if(bookList.isEmpty()) {
-            return List.of();
+        Book newBook = new Book();
+        newBook.setTitle(bookFromSearchRequestDTO.title());
+        newBook.setAuthor(bookFromSearchRequestDTO.author());
+        newBook.setIsbn(bookFromSearchRequestDTO.isbn());
+        newBook.setTotalPages(bookFromSearchRequestDTO.totalPages());
+        newBook.setCoverUrl(bookFromSearchRequestDTO.coverUrl());
+        newBook.setUser(foundUser);
+        Book savedBook = bookRepository.save(newBook);
+        if(foundUser.getBooks() == null) {
+            foundUser.setBooks(new ArrayList<>());
         }
-        return bookList.stream()
+        foundUser.getBooks().add(savedBook);
+        return new BookResponseDTO(
+                savedBook.getBookId(),
+                savedBook.getTitle(),
+                savedBook.getAuthor(),
+                savedBook.getIsbn(),
+                savedBook.getCoverUrl(),
+                savedBook.getTotalPages()
+        );
+    }
+
+    @Override
+    public Page<BookResponseDTO> getBooksByUser(
+            Integer userId,
+            Pageable pageable
+    ) {
+        User foundUser = getUser(userId);
+        Page<Book> bookList = bookRepository.findByUserUserId(
+                foundUser.getUserId(),
+                pageable
+        );
+        return bookList
                 .map(book ->
                     new BookResponseDTO(
                         book.getBookId(),
@@ -80,8 +110,7 @@ public class BookServiceImpl implements BookService {
                         book.getCoverUrl(),
                         book.getTotalPages()
                     )
-                )
-                .toList();
+                );
     }
 
     @Override

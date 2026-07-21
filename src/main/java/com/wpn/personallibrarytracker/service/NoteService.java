@@ -3,6 +3,7 @@ package com.wpn.personallibrarytracker.service;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.noteDTOs.NoteUpdateRequestDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -22,7 +23,7 @@ public interface NoteService {
             Integer noteId,
             Integer bookId,
             Integer userId,
-            NoteRequestDTO noteRequestDTO
+            NoteUpdateRequestDTO noteUpdateRequestDTO
     );
     void deleteNote(
             Integer noteId,

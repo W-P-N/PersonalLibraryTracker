@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -46,12 +48,12 @@ public class BookRepositoryTest {
         bookRepository.save(book2);
 
         // Act
-        List<Book> books = bookRepository.findByUserUserId(savedUser.getUserId());
+        Page<Book> books = bookRepository.findByUserUserId(savedUser.getUserId(), PageRequest.of(0, 10));
 
         // Assert
-        Assertions.assertEquals(2, books.size());
-        Assertions.assertTrue(books.stream().anyMatch(b -> b.getTitle().equals("Title 1")));
-        Assertions.assertTrue(books.stream().anyMatch(b -> b.getTitle().equals("Title 2")));
+        Assertions.assertEquals(2, books.getContent().size());
+        Assertions.assertTrue(books.getContent().stream().anyMatch(b -> b.getTitle().equals("Title 1")));
+        Assertions.assertTrue(books.getContent().stream().anyMatch(b -> b.getTitle().equals("Title 2")));
     }
 
     @Test
@@ -64,7 +66,7 @@ public class BookRepositoryTest {
         User savedUser = userRepository.save(user);
 
         // Act
-        List<Book> books = bookRepository.findByUserUserId(savedUser.getUserId());
+        Page<Book> books = bookRepository.findByUserUserId(savedUser.getUserId(), PageRequest.of(0, 10));
 
         // Assert
         Assertions.assertTrue(books.isEmpty());
