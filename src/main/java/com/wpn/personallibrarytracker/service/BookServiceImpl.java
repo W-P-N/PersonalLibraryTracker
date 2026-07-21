@@ -10,7 +10,6 @@ import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
-import org.modelmapper.ModelMapper;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
