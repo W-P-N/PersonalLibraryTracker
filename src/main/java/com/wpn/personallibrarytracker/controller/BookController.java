@@ -1,14 +1,14 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.*;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -26,7 +26,7 @@ public class BookController {
     @PostMapping
     public ResponseEntity<BookResponseDTO> addBook(
             @PathVariable Integer userId,
-            @RequestBody BookRequestDTO bookRequestDTO
+            @RequestBody @Valid BookRequestDTO bookRequestDTO
             ) {
         BookResponseDTO bookResponseDTO = bookService.addBook(userId, bookRequestDTO);
         return new ResponseEntity<>(
@@ -35,11 +35,26 @@ public class BookController {
         );
     }
 
-    @GetMapping
-    public ResponseEntity<List<BookResponseDTO>> getBooks(
-            @PathVariable Integer userId
+    @PostMapping("/from-search")
+    public ResponseEntity<BookResponseDTO> addBookFromSearch(
+            @PathVariable Integer userId,
+            @RequestBody @Valid BookFromSearchRequestDTO bookFromSearchRequestDTO
     ) {
-        List<BookResponseDTO> booksList = bookService.getBooksByUser(userId);
+        BookResponseDTO bookResponseDTO = bookService.addBookFromSearch(userId, bookFromSearchRequestDTO);
+        return new ResponseEntity<>(
+                bookResponseDTO,
+                HttpStatus.CREATED
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<BookResponseDTO>> getBooks(
+            @PathVariable Integer userId,
+            @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(name = "pageSize", defaultValue = "5") Integer pageSize
+    ) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<BookResponseDTO> booksList = bookService.getBooksByUser(userId, pageable);
         return ResponseEntity.ok(booksList);
     }
 
