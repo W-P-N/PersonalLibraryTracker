@@ -8,7 +8,6 @@ import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 
 public interface UserService {
     UserResponseDTO getUser(Integer userId) throws UserNotFoundException;
-    UserResponseDTO registerUser(UserCreateRequestDTO userCreateRequestDTO) throws UserAlreadyExistsException;
     UserResponseDTO updateUser(Integer userId, UserUpdateRequestDTO userUpdateRequestDTO) throws UserNotFoundException;
     void deleteUser(Integer userId) throws UserNotFoundException;
 }
