@@ -14,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 import org.springframework.core.env.Environment;
 
 import java.util.Optional;
@@ -23,8 +22,6 @@ import java.util.Optional;
 public class UserServiceImplTest {
     @Mock
     UserRepository userRepository;
-    @Mock
-    ModelMapper modelMapper;
     @InjectMocks
     UserServiceImpl userService;
     @Mock

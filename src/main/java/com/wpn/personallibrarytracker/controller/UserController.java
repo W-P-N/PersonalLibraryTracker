@@ -29,16 +29,6 @@ public class UserController {
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 
-    @PostMapping
-    public ResponseEntity<UserResponseDTO> createUser(
-            @Valid
-            @RequestBody
-            UserCreateRequestDTO userCreateRequestDTO
-    ) throws UserAlreadyExistsException {
-        UserResponseDTO userResponseDTO = userService.registerUser(userCreateRequestDTO);
-        return new ResponseEntity<>(userResponseDTO, HttpStatus.CREATED);
-    }
-
     @PutMapping("/{userId}")
     public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable

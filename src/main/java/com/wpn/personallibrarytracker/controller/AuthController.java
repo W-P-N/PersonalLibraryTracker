@@ -1,6 +1,7 @@
 package com.wpn.personallibrarytracker.controller;
 
 import com.wpn.personallibrarytracker.dto.authDTOs.LoginRequestDTO;
+import com.wpn.personallibrarytracker.dto.authDTOs.LoginResponseDTO;
 import com.wpn.personallibrarytracker.dto.authDTOs.RegisterRequestDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
@@ -35,7 +36,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponseDTO> loginUser(
+    public ResponseEntity<LoginResponseDTO> loginUser(
             @Valid
             @RequestBody
             LoginRequestDTO loginRequestDTO
