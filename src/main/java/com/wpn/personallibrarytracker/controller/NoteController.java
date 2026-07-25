@@ -12,11 +12,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users/{userId}/books/{bookId}/notes")
+@RequestMapping("/books/{bookId}/notes")
 @Validated
 public class NoteController {
     @Autowired
@@ -24,7 +25,7 @@ public class NoteController {
 
     @PostMapping
     public ResponseEntity<NoteDetailsResponseDTO> addNote(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestBody @Valid NoteRequestDTO noteRequestDTO
     ) {
@@ -40,7 +41,7 @@ public class NoteController {
 
     @GetMapping
     public ResponseEntity<Page<NoteResponseDTO>> getNotes(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "5") Integer pageSize
@@ -57,7 +58,7 @@ public class NoteController {
 
     @GetMapping("/{noteId}")
     public ResponseEntity<NoteDetailsResponseDTO> getNoteById(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer noteId
     ) {
@@ -72,7 +73,7 @@ public class NoteController {
 
     @PatchMapping("/{noteId}")
     public ResponseEntity<NoteDetailsResponseDTO> updateNote(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer noteId,
             @RequestBody @Valid NoteUpdateRequestDTO noteUpdateRequestDTO
@@ -89,7 +90,7 @@ public class NoteController {
 
     @DeleteMapping("/{noteId}")
     public ResponseEntity<Void> deleteNote(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer noteId
     ) {

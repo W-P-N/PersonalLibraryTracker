@@ -10,28 +10,29 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/users/me")
 @Validated
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    @GetMapping("/{userId}")
+    @GetMapping
     public ResponseEntity<UserResponseDTO> getUser(
-            @PathVariable Integer userId
+            @AuthenticationPrincipal Integer userId
     ) throws UserNotFoundException {
         UserResponseDTO userResponseDTO = userService.getUser(userId);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 
-    @PutMapping("/{userId}")
+    @PutMapping
     public ResponseEntity<UserResponseDTO> updateUser(
-            @PathVariable
+            @AuthenticationPrincipal
             Integer userId,
             @Valid
             @RequestBody
@@ -41,9 +42,9 @@ public class UserController {
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping
     public ResponseEntity<Void> deleteUser(
-            @PathVariable
+            @AuthenticationPrincipal
             Integer userId
     ) throws UserNotFoundException {
         userService.deleteUser(userId);

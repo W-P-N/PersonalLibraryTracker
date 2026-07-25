@@ -26,6 +26,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception exception) {
+        System.out.println(exception.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(
                 environment.getProperty("EXCEPTIONS.SERVER_ERROR_EXCEPTION"),
                 HttpStatus.INTERNAL_SERVER_ERROR.value()

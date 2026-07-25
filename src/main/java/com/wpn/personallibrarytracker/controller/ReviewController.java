@@ -8,11 +8,12 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users/{userId}/books/{bookId}/review")
+@RequestMapping("/books/{bookId}/review")
 @Validated
 public class ReviewController {
     @Autowired
@@ -20,10 +21,11 @@ public class ReviewController {
 
     @PostMapping
     public ResponseEntity<ReviewResponseDTO> addReview(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestBody @Valid ReviewCreateRequestDTO reviewCreateRequestDTO
     ) {
+        System.out.println("In controller");
         return new ResponseEntity<>(
                 reviewService.addReview(
                         bookId,
@@ -36,7 +38,7 @@ public class ReviewController {
 
     @GetMapping
     public ResponseEntity<ReviewResponseDTO> getReview(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId
     ) {
         return ResponseEntity.ok(
@@ -49,7 +51,7 @@ public class ReviewController {
 
     @PatchMapping
     public ResponseEntity<ReviewResponseDTO> updateReview(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestBody @Valid ReviewUpdateRequestDTO reviewUpdateRequestDTO
     ) {
@@ -64,7 +66,7 @@ public class ReviewController {
 
     @DeleteMapping
     public ResponseEntity<Void> deleteReview(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId
     ) {
         reviewService.deleteReview(bookId, userId);
