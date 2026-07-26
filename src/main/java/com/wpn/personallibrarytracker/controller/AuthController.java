@@ -1,13 +1,12 @@
 package com.wpn.personallibrarytracker.controller;
 
+import com.wpn.personallibrarytracker.dto.authDTOs.AuthResponseDTO;
 import com.wpn.personallibrarytracker.dto.authDTOs.LoginRequestDTO;
-import com.wpn.personallibrarytracker.dto.authDTOs.LoginResponseDTO;
+import com.wpn.personallibrarytracker.dto.authDTOs.RefreshTokenRequestDTO;
 import com.wpn.personallibrarytracker.dto.authDTOs.RegisterRequestDTO;
-import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.service.AuthService;
-import com.wpn.personallibrarytracker.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,13 +35,25 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> loginUser(
+    public ResponseEntity<AuthResponseDTO> loginUser(
             @Valid
             @RequestBody
             LoginRequestDTO loginRequestDTO
     ) {
         return new ResponseEntity<>(
             authService.loginUser(loginRequestDTO),
+                HttpStatus.OK
+        );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponseDTO> refreshToken(
+            @Valid
+            @RequestBody
+            RefreshTokenRequestDTO refreshTokenRequestDTO
+    ) {
+        return new ResponseEntity<>(
+                authService.refreshToken(refreshTokenRequestDTO),
                 HttpStatus.OK
         );
     }

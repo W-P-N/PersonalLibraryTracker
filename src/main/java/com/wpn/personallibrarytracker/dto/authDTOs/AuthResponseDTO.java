@@ -1,8 +1,10 @@
 package com.wpn.personallibrarytracker.dto.authDTOs;
 
-public record LoginResponseDTO(
+public record AuthResponseDTO(
         Integer userId,
         String username,
         String email,
-        String token
-) {};
+        String token,
+        String refreshToken
+) {
+}
