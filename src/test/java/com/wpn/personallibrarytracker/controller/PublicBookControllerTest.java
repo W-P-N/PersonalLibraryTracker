@@ -2,9 +2,11 @@ package com.wpn.personallibrarytracker.controller;
 
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
 import com.wpn.personallibrarytracker.service.BookSearchService;
+import com.wpn.personallibrarytracker.service.JwtService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -17,7 +19,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.context.annotation.Import;
+import com.wpn.personallibrarytracker.config.SecurityConfig;
+
 @WebMvcTest(PublicBookController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfig.class)
 public class PublicBookControllerTest {
 
     @Autowired
@@ -25,6 +32,9 @@ public class PublicBookControllerTest {
 
     @MockitoBean
     private BookSearchService bookSearchService;
+    
+    @MockitoBean
+    private JwtService jwtService;
 
     @Test
     void searchBooks_shouldReturn200AndBookList_whenQueryIsProvided() throws Exception {

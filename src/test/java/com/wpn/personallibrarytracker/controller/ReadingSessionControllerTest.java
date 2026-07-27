@@ -4,6 +4,12 @@ import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionReque
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.service.ReadingSessionService;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.wpn.personallibrarytracker.service.JwtService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +28,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.context.annotation.Import;
+import com.wpn.personallibrarytracker.config.SecurityConfig;
+
 @WebMvcTest(ReadingSessionController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfig.class)
 public class ReadingSessionControllerTest {
 
     @Autowired
@@ -33,6 +44,21 @@ public class ReadingSessionControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @MockitoBean
+    private JwtService jwtService;
+
+    @BeforeEach
+    void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(1, null, java.util.Collections.emptyList())
+        );
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     // Happy Paths
 
@@ -43,7 +69,7 @@ public class ReadingSessionControllerTest {
 
         Mockito.when(readingSessionService.logSession(eq(1), eq(100), any(ReadingSessionRequestDTO.class))).thenReturn(response);
 
-        mockMvc.perform(post("/users/1/books/100/sessions")
+        mockMvc.perform(post("/books/100/sessions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -61,7 +87,7 @@ public class ReadingSessionControllerTest {
         Mockito.when(readingSessionService.getSessions(eq(1), eq(100), any(org.springframework.data.domain.Pageable.class)))
                 .thenReturn(page);
 
-        mockMvc.perform(get("/users/1/books/100/sessions")
+        mockMvc.perform(get("/books/100/sessions")
                 .param("pageNumber", "0")
                 .param("pageSize", "10"))
                 .andExpect(status().isOk())
@@ -80,7 +106,7 @@ public class ReadingSessionControllerTest {
 
         Mockito.when(readingSessionService.getSessionById(1, 100, 1)).thenReturn(response);
 
-        mockMvc.perform(get("/users/1/books/100/sessions/1"))
+        mockMvc.perform(get("/books/100/sessions/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.readingSessionId").value(1))
                 .andExpect(jsonPath("$.endSessionPageNumber").value(50));
@@ -93,7 +119,7 @@ public class ReadingSessionControllerTest {
 
         Mockito.when(readingSessionService.updateSession(eq(1), eq(100), eq(1), any(ReadingSessionRequestDTO.class))).thenReturn(response);
 
-        mockMvc.perform(patch("/users/1/books/100/sessions/1")
+        mockMvc.perform(patch("/books/100/sessions/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -105,7 +131,7 @@ public class ReadingSessionControllerTest {
     void deleteSession_shouldReturnNoContent() throws Exception {
         Mockito.doNothing().when(readingSessionService).deleteSession(1, 100, 1);
 
-        mockMvc.perform(delete("/users/1/books/100/sessions/1"))
+        mockMvc.perform(delete("/books/100/sessions/1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -118,7 +144,7 @@ public class ReadingSessionControllerTest {
         Mockito.when(readingSessionService.logSession(eq(1), eq(100), any(ReadingSessionRequestDTO.class)))
                 .thenThrow(new BookNotFoundForUserException("Book not found"));
 
-        mockMvc.perform(post("/users/1/books/100/sessions")
+        mockMvc.perform(post("/books/100/sessions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -129,7 +155,7 @@ public class ReadingSessionControllerTest {
         Mockito.when(readingSessionService.getSessionById(1, 100, 1))
                 .thenThrow(new BookNotFoundForUserException("Book not found"));
 
-        mockMvc.perform(get("/users/1/books/100/sessions/1"))
+        mockMvc.perform(get("/books/100/sessions/1"))
                 .andExpect(status().isNotFound());
     }
 
@@ -140,7 +166,7 @@ public class ReadingSessionControllerTest {
         Mockito.when(readingSessionService.updateSession(eq(1), eq(100), eq(1), any(ReadingSessionRequestDTO.class)))
                 .thenThrow(new RuntimeException("Generic error"));
 
-        mockMvc.perform(patch("/users/1/books/100/sessions/1")
+        mockMvc.perform(patch("/books/100/sessions/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isInternalServerError());

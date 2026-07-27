@@ -6,6 +6,12 @@ import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
+import com.wpn.personallibrarytracker.service.JwtService;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,55 +26,33 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(UserController.class)
-public class UserControllerTest {
+import org.springframework.context.annotation.Import;
+import com.wpn.personallibrarytracker.config.SecurityConfig;
 
+@WebMvcTest(UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfig.class)
+public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
-
     @MockitoBean
     private UserService userService;
-
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    void createUserDetails_shouldReturn201AndUserResponseDTO_whenValidBody() throws Exception {
-        UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "test@mail.com", "password123");
-        UserResponseDTO response = new UserResponseDTO(1, "testuser", "test@mail.com");
+    @MockitoBean
+    private JwtService jwtService;
 
-        Mockito.when(userService.registerUser(any(UserCreateRequestDTO.class))).thenReturn(response);
-
-        mockMvc.perform(post("/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.userName").value("testuser"))
-                .andExpect(jsonPath("$.email").value("test@mail.com"));
+    @BeforeEach
+    void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(1, null, java.util.Collections.emptyList())
+        );
     }
 
-    @Test
-    void createUser_shouldReturn409_whenDuplicateEmail() throws Exception {
-        UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "test@mail.com", "password123");
-
-        Mockito.when(userService.registerUser(any(UserCreateRequestDTO.class)))
-                .thenThrow(new UserAlreadyExistsException("Email already exists"));
-
-        mockMvc.perform(post("/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isConflict());
-    }
-
-    @Test
-    void createUser_shouldReturn400_whenInvalidBody() throws Exception {
-        UserCreateRequestDTO request = new UserCreateRequestDTO("testuser", "", "password123");
-
-        mockMvc.perform(post("/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnprocessableContent());
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test
@@ -77,7 +61,7 @@ public class UserControllerTest {
 
         Mockito.when(userService.getUser(1)).thenReturn(response);
 
-        mockMvc.perform(get("/users/1")
+        mockMvc.perform(get("/users/me")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(1))
@@ -89,7 +73,7 @@ public class UserControllerTest {
     void getUser_shouldReturn404_whenNotFound() throws Exception {
         Mockito.when(userService.getUser(1)).thenThrow(new UserNotFoundException("User not found"));
 
-        mockMvc.perform(get("/users/1")
+        mockMvc.perform(get("/users/me")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -99,7 +83,7 @@ public class UserControllerTest {
         UserUpdateRequestDTO userUpdateRequestDTO = new UserUpdateRequestDTO("test1", "test@123.com");
         UserResponseDTO userResponseDTO = new UserResponseDTO(1, "test1", "test@123.com");
         Mockito.when(userService.updateUser(1, userUpdateRequestDTO)).thenReturn(userResponseDTO);
-        mockMvc.perform(put("/users/{userId}", 1)
+        mockMvc.perform(put("/users/me", 1)
                 .content(objectMapper.writeValueAsString(userUpdateRequestDTO))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -110,10 +94,13 @@ public class UserControllerTest {
 
     @Test
     void updateUser_shouldReturn404_whenNotFound() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(123, null, java.util.Collections.emptyList())
+        );
         UserUpdateRequestDTO userUpdateRequestDTO = new UserUpdateRequestDTO("test1", "test@123.com");
         Mockito.when(userService.updateUser(123, userUpdateRequestDTO))
                 .thenThrow(new UserNotFoundException("User not found"));
-        mockMvc.perform(put("/users/{userId}", 123)
+        mockMvc.perform(put("/users/me", 123)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
                 .andExpect(status().isNotFound());
@@ -122,7 +109,10 @@ public class UserControllerTest {
     @Test
     void deleteUser_shouldReturn204() throws Exception {
         Integer mockUserId = 100;
-        mockMvc.perform(delete("/users/{userId}", mockUserId)
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, java.util.Collections.emptyList())
+        );
+        mockMvc.perform(delete("/users/me", mockUserId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
         Mockito.verify(userService).deleteUser(mockUserId);
@@ -131,9 +121,12 @@ public class UserControllerTest {
     @Test
     void deleteUser_shouldReturn404_whenNotFound() throws Exception {
         Integer mockUserId = 123;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, java.util.Collections.emptyList())
+        );
         Mockito.doThrow(new UserNotFoundException("User not found"))
                 .when(userService).deleteUser(mockUserId);
-        mockMvc.perform(delete("/users/{userId}", mockUserId))
+        mockMvc.perform(delete("/users/me", mockUserId))
                 .andExpect(status().isNotFound());
     }
 }
