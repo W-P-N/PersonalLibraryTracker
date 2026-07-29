@@ -16,8 +16,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/books/{bookId}/review")
 @Validated
 public class ReviewController {
-    @Autowired
-    ReviewService reviewService;
+    private final ReviewService reviewService;
+
+    public ReviewController(
+            ReviewService reviewService
+    ) {
+        this.reviewService = reviewService;
+    }
 
     @PostMapping
     public ResponseEntity<ReviewResponseDTO> addReview(

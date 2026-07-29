@@ -13,8 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/stats")
 public class StatsController {
-    @Autowired
-    StatsService statsService;
+    private final StatsService statsService;
+
+    public StatsController(
+            StatsService statsService
+    ) {
+        this.statsService = statsService;
+    }
 
     @GetMapping
     public ResponseEntity<StatsResponseDTO> getStats(

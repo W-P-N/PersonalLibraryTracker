@@ -13,8 +13,13 @@ import java.util.List;
 @RequestMapping("/books/search")
 @Validated
 public class PublicBookController {
-    @Autowired
-    private BookSearchService bookSearchService;
+    private final BookSearchService bookSearchService;
+
+    public PublicBookController(
+            BookSearchService bookSearchService
+    ) {
+        this.bookSearchService = bookSearchService;
+    }
 
     @GetMapping
     public ResponseEntity<List<BookSearchResponseDTO>> searchBooks(@RequestParam String query) {

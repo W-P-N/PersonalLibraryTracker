@@ -21,9 +21,13 @@ import java.util.List;
 @RequestMapping("/books/{bookId}/sessions")
 @Validated
 public class ReadingSessionController {
+    private final ReadingSessionService readingSessionService;
 
-    @Autowired
-    ReadingSessionService readingSessionService;
+    public ReadingSessionController(
+            ReadingSessionService readingSessionService
+    ) {
+        this.readingSessionService = readingSessionService;
+    }
 
     @PostMapping
     public ResponseEntity<ReadingSessionResponseDTO> addSession(
