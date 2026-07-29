@@ -11,13 +11,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/users/{userId}/books/{bookId}/sessions")
+@RequestMapping("/books/{bookId}/sessions")
 @Validated
 public class ReadingSessionController {
 
@@ -26,7 +27,7 @@ public class ReadingSessionController {
 
     @PostMapping
     public ResponseEntity<ReadingSessionResponseDTO> addSession(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestBody @Valid ReadingSessionRequestDTO readingSessionRequestDTO
     ) {
@@ -41,7 +42,7 @@ public class ReadingSessionController {
 
     @GetMapping
     public ResponseEntity<Page<ReadingSessionResponseDTO>> getSessions(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
             @RequestParam(name = "pageSize", defaultValue = "5") Integer pageSize
@@ -54,7 +55,7 @@ public class ReadingSessionController {
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<ReadingSessionResponseDTO> getSessionById(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer sessionId
     ) {
@@ -65,7 +66,7 @@ public class ReadingSessionController {
 
     @PatchMapping("/{sessionId}")
     public ResponseEntity<ReadingSessionResponseDTO> updateSession(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer sessionId,
             @RequestBody @Valid ReadingSessionRequestDTO readingSessionRequestDTO
@@ -79,7 +80,7 @@ public class ReadingSessionController {
 
     @DeleteMapping("/{sessionId}")
     public ResponseEntity<Void> deleteSession(
-            @PathVariable Integer userId,
+            @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer sessionId
     ) {

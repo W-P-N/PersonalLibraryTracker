@@ -11,6 +11,14 @@ import com.wpn.personallibrarytracker.dto.bookDTOs.BookFromSearchRequestDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
+import com.wpn.personallibrarytracker.service.JwtService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,17 +42,32 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-@WebMvcTest(BookController.class)
-public class BookControllerTest {
+import org.springframework.context.annotation.Import;
+import com.wpn.personallibrarytracker.config.SecurityConfig;
 
+@WebMvcTest(BookController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(SecurityConfig.class)
+public class BookControllerTest {
     @Autowired
     private MockMvc mockMvc;
-
     @MockitoBean
     private BookService bookService;
-
+    @MockitoBean
+    private JwtService jwtService;
     @Autowired
     private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        Authentication authentication = new UsernamePasswordAuthenticationToken(1, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void addBook_shouldReturn200AndBookResponseDTO_whenValidInput() throws Exception {
@@ -70,7 +93,7 @@ public class BookControllerTest {
         Mockito.when(bookService.addBook(eq(userId), any(BookRequestDTO.class))).thenReturn(response);
 
         // Act & Assert
-        mockMvc.perform(post("/users/{userId}/books", userId)
+        mockMvc.perform(post("/books")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -86,6 +109,9 @@ public class BookControllerTest {
     void addBook_shouldReturn404_whenUserNotFound() throws Exception {
         // Arrange
         Integer userId = 999;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList())
+        );
         BookRequestDTO request = new BookRequestDTO(
                 "The Hobbit",
                 "J.R.R. Tolkien",
@@ -98,7 +124,7 @@ public class BookControllerTest {
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
-        mockMvc.perform(post("/users/{userId}/books", userId)
+        mockMvc.perform(post("/books")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isNotFound());
@@ -128,7 +154,7 @@ public class BookControllerTest {
         Mockito.when(bookService.addBookFromSearch(eq(userId), any(BookFromSearchRequestDTO.class))).thenReturn(response);
 
         // Act & Assert
-        mockMvc.perform(post("/users/{userId}/books/from-search", userId)
+        mockMvc.perform(post("/books/from-search")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -166,7 +192,7 @@ public class BookControllerTest {
         Mockito.when(bookService.getBooksByUser(eq(userId), any(Pageable.class))).thenReturn(pagedResponse);
 
         // Act & Assert
-        mockMvc.perform(get("/users/{userId}/books", userId)
+        mockMvc.perform(get("/books")
                 .param("pageNumber", "0")
                 .param("pageSize", "5")
                 .accept(MediaType.APPLICATION_JSON))
@@ -182,11 +208,14 @@ public class BookControllerTest {
     void getBooks_shouldReturn404_whenUserNotFound() throws Exception {
         // Arrange
         Integer userId = 999;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList())
+        );
         Mockito.when(bookService.getBooksByUser(eq(userId), any(Pageable.class)))
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
-        mockMvc.perform(get("/users/{userId}/books", userId)
+        mockMvc.perform(get("/books")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -222,7 +251,7 @@ public class BookControllerTest {
         Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId))).thenReturn(response);
 
         // Act & Assert
-        mockMvc.perform(get("/users/{userId}/books/{bookId}", userId, bookId)
+        mockMvc.perform(get("/books/{bookId}", bookId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.bookId").value(101))
@@ -239,12 +268,15 @@ public class BookControllerTest {
         // Arrange
         Integer userId = 999;
         Integer bookId = 101;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList())
+        );
 
         Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId)))
                 .thenThrow(new UserNotFoundException("User not found"));
 
         // Act & Assert
-        mockMvc.perform(get("/users/{userId}/books/{bookId}", userId, bookId)
+        mockMvc.perform(get("/books/{bookId}", bookId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -259,7 +291,7 @@ public class BookControllerTest {
                 .thenThrow(new BookNotFoundForUserException("Book not found for user"));
 
         // Act & Assert
-        mockMvc.perform(get("/users/{userId}/books/{bookId}", userId, bookId)
+        mockMvc.perform(get("/books/{bookId}", bookId)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -269,6 +301,9 @@ public class BookControllerTest {
         // Arrange
         Integer mockUserId = 12;
         Integer mockBookId = 23;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
+        );
         BookUpdateRequestDTO mockBookUpdateRequestDTO = new BookUpdateRequestDTO(
                 "test title",
                 "test author",
@@ -288,7 +323,7 @@ public class BookControllerTest {
         Mockito.when(bookService.updateBook(eq(mockUserId), eq(mockBookId), eq(mockBookUpdateRequestDTO)))
                         .thenReturn(mockBookResponseDTO);
         // Act
-        mockMvc.perform(patch("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(patch("/books/{bookId}", mockBookId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
                         .accept(MediaType.APPLICATION_JSON))
@@ -306,6 +341,9 @@ public class BookControllerTest {
         // Arrange
         Integer mockUserId = 12;
         Integer mockBookId = 23;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
+        );
         BookUpdateRequestDTO mockBookUpdateRequestDTO = new BookUpdateRequestDTO(
                 "test title",
                 "test author",
@@ -316,7 +354,7 @@ public class BookControllerTest {
         Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
                 .thenThrow(UserNotFoundException.class);
         // Act
-        mockMvc.perform(patch("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(patch("/books/{bookId}", mockBookId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
                 .accept(MediaType.APPLICATION_JSON))
@@ -328,6 +366,9 @@ public class BookControllerTest {
         // Arrange
         Integer mockUserId = 12;
         Integer mockBookId = 23;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
+        );
         BookUpdateRequestDTO mockBookUpdateRequestDTO = new BookUpdateRequestDTO(
                 "test title",
                 "test author",
@@ -338,7 +379,7 @@ public class BookControllerTest {
         Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
                 .thenThrow(BookNotFoundForUserException.class);
         // Act
-        mockMvc.perform(patch("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(patch("/books/{bookId}", mockBookId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(mockBookUpdateRequestDTO))
                         .accept(MediaType.APPLICATION_JSON))
@@ -350,13 +391,16 @@ public class BookControllerTest {
         // Arrange
         Integer mockUserId = 12;
         Integer mockBookId = 23;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
+        );
 
         Mockito.doNothing()
                 .when(bookService)
                 .deleteBook(mockUserId, mockBookId);
 
         // Act
-        mockMvc.perform(delete("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(delete("/books/{bookId}", mockBookId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
@@ -370,13 +414,16 @@ public class BookControllerTest {
         // Arrange
         Integer mockUserId = 12;
         Integer mockBookId = 23;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
+        );
 
         Mockito.doThrow(UserNotFoundException.class)
                 .when(bookService)
                 .deleteBook(mockUserId, mockBookId);
 
         // Act
-        mockMvc.perform(delete("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(delete("/books/{bookId}", mockBookId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -386,13 +433,16 @@ public class BookControllerTest {
         // Arrange
         Integer mockUserId = 12;
         Integer mockBookId = 23;
+        SecurityContextHolder.getContext().setAuthentication(
+            new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
+        );
 
         Mockito.doThrow(BookNotFoundForUserException.class)
                 .when(bookService)
                 .deleteBook(mockUserId, mockBookId);
 
         // Act
-        mockMvc.perform(delete("/users/{userId}/books/{bookId}", mockUserId, mockBookId)
+        mockMvc.perform(delete("/books/{bookId}", mockBookId)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }

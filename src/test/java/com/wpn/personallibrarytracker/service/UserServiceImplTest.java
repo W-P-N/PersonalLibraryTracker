@@ -14,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 import org.springframework.core.env.Environment;
 
 import java.util.Optional;
@@ -23,70 +22,10 @@ import java.util.Optional;
 public class UserServiceImplTest {
     @Mock
     UserRepository userRepository;
-    @Mock
-    ModelMapper modelMapper;
     @InjectMocks
     UserServiceImpl userService;
     @Mock
     Environment environment;
-
-    @Test
-    void registerUserDetails_shouldReturnUserResponseDTO_whenEmailIsUnique() {
-        // Arrange
-        UserCreateRequestDTO userCreateRequestDTO = new UserCreateRequestDTO(
-                "test",
-                "test@mail.com",
-                "testpassword"
-        );
-
-        User user = new User();
-        user.setUserId(1234);
-        user.setUserName("test");
-        user.setEmail("test@mail.com");
-        user.setPassword("testpassword");
-
-        UserResponseDTO newUser = new UserResponseDTO(
-                1234,
-                "test",
-                "test@mail.com"
-        );
-
-        Mockito.when(userRepository.findByEmail(Mockito.anyString()))
-                    .thenReturn(Optional.empty());
-        Mockito.when(userRepository.save(Mockito.any(User.class)))
-                .thenReturn(user);
-
-        // Act
-        UserResponseDTO userResponseDTO = userService.registerUser(userCreateRequestDTO);
-
-        Assertions.assertEquals(userResponseDTO, newUser);
-        Mockito.verify(userRepository, Mockito.times(1)).save(Mockito.any(User.class));
-        Mockito.verify(userRepository, Mockito.times(1)).findByEmail(Mockito.anyString());
-    }
-
-    @Test
-    void registerUserDetails_shouldThrowUserAlreadyExistsException_whenEmailExists() {
-        // Arrange
-        User user = new User();
-        user.setUserName("test");
-        user.setEmail("test@mail.com");
-        user.setPassword("testpassword");
-
-        Optional<User> userOptional = Optional.of(user);
-
-        Mockito.when(userRepository.findByEmail(Mockito.anyString()))
-                .thenReturn(userOptional);
-
-        UserCreateRequestDTO userCreateRequestDTO = new UserCreateRequestDTO(
-                "test",
-                "test@mail.com",
-                "testpassword"
-        );
-        // Act and Assert
-        Assertions.assertThrows(UserAlreadyExistsException.class, () -> {
-            userService.registerUser(userCreateRequestDTO);
-        });
-    }
 
     @Test
     void getUserById_shouldReturnUserResponseDTO_whenUserIdIsFound() {

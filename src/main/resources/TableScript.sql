@@ -58,6 +58,17 @@ CREATE TABLE notes(
         ON DELETE CASCADE
 );
 
+CREATE TABLE refresh_tokens(
+    refresh_token_id INT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(36) NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    expiry_date DATETIME NOT NULL,
+    CONSTRAINT fk_refresh_token_user
+                           FOREIGN KEY (user_id)
+                           REFERENCES users(user_id)
+                           ON DELETE CASCADE
+);
+
 INSERT INTO users(user_name, email, password)
 VALUES
     ("test1", "test1@mail.com", "test1password"),
