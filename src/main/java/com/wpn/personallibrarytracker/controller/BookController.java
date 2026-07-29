@@ -21,8 +21,13 @@ import java.util.List;
 @RequestMapping("/books")
 @Validated
 public class BookController {
-    @Autowired
-    private BookService bookService;
+    private final BookService bookService;
+
+    public BookController(
+            BookService bookService
+    ) {
+        this.bookService = bookService;
+    }
 
     @PostMapping
     public ResponseEntity<BookResponseDTO> addBook(

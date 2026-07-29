@@ -20,8 +20,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/books/{bookId}/notes")
 @Validated
 public class NoteController {
-    @Autowired
-    NoteService noteService;
+    private final NoteService noteService;
+
+    public NoteController(
+            NoteService noteService
+    ) {
+        this.noteService = noteService;
+    }
 
     @PostMapping
     public ResponseEntity<NoteDetailsResponseDTO> addNote(
