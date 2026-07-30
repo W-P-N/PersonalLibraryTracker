@@ -20,17 +20,14 @@ public class Book {
     @Column(unique = true, nullable = true)
     private String isbn;
     private String coverUrl;
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name="book_id")
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private List<ReadingSession> readingSessions;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name="book_id")
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private List<Note> notes;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="review_id", unique = true)
+    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL)
     private Review review;
 
     @Override
