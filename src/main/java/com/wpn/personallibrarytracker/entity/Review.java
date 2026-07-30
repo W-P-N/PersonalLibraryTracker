@@ -15,7 +15,7 @@ public class Review {
     private String content;
     private Integer rating;
     private LocalDateTime createdAt;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "book_id")
+    @OneToOne
+    @JoinColumn(name = "book_id", unique = true, nullable = false)
     private Book book;
 }
