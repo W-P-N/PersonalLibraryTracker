@@ -152,14 +152,14 @@ public class AuthServiceImplTest {
     void refreshToken_happyPath_shouldReturnAuthResponseDTO() {
         RefreshTokenRequestDTO requestDTO = new RefreshTokenRequestDTO("old-refresh-token");
         RefreshToken oldToken = new RefreshToken();
-        oldToken.setToken("old-refresh-token");
+        oldToken.setTokenHash("old-refresh-token");
         oldToken.setExpiryDate(LocalDateTime.now().plusDays(1));
         User user = new User();
         user.setUserId(1);
         user.setUserName("test");
         oldToken.setUser(user);
 
-        Mockito.when(refreshTokenRepository.findByToken(Mockito.anyString()))
+        Mockito.when(refreshTokenRepository.findByTokenHash(Mockito.anyString()))
                 .thenReturn(Optional.of(oldToken));
         
         RefreshToken newToken = new RefreshToken();
@@ -178,7 +178,7 @@ public class AuthServiceImplTest {
     @Test
     void refreshToken_unHappyPath_shouldThrowInvalidRefreshTokenException_whenTokenNotFound() {
         RefreshTokenRequestDTO requestDTO = new RefreshTokenRequestDTO("non-existent-token");
-        Mockito.when(refreshTokenRepository.findByToken(Mockito.anyString()))
+        Mockito.when(refreshTokenRepository.findByTokenHash(Mockito.anyString()))
                 .thenReturn(Optional.empty());
 
         Assertions.assertThrows(InvalidRefreshTokenException.class, () -> {
@@ -190,10 +190,10 @@ public class AuthServiceImplTest {
     void refreshToken_unHappyPath_shouldThrowInvalidRefreshTokenException_whenTokenIsExpired() {
         RefreshTokenRequestDTO requestDTO = new RefreshTokenRequestDTO("expired-token");
         RefreshToken expiredToken = new RefreshToken();
-        expiredToken.setToken("expired-token");
+        expiredToken.setTokenHash("expired-token");
         expiredToken.setExpiryDate(LocalDateTime.now().minusDays(1));
 
-        Mockito.when(refreshTokenRepository.findByToken(Mockito.anyString()))
+        Mockito.when(refreshTokenRepository.findByTokenHash(Mockito.anyString()))
                 .thenReturn(Optional.of(expiredToken));
 
         Assertions.assertThrows(InvalidRefreshTokenException.class, () -> {

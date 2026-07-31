@@ -12,6 +12,7 @@ import com.wpn.personallibrarytracker.exceptions.InvalidRefreshTokenException;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.repository.RefreshTokenRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
+import com.wpn.personallibrarytracker.utility.TokenHasher;
 import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,19 +28,22 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final TokenHasher tokenHasher;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             RefreshTokenRepository refreshTokenRepository,
             Environment environment,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService
+            JwtService jwtService,
+            TokenHasher tokenHasher
     ) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.environment = environment;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.tokenHasher = tokenHasher;
     }
 
     @Override
@@ -83,18 +87,19 @@ public class AuthServiceImpl implements AuthService {
             );
         }
         String token = jwtService.generateToken(foundUser.getUserId());
+        String rawRefreshToken = UUID.randomUUID().toString();
         RefreshToken newRefreshToken = new RefreshToken();
-        newRefreshToken.setToken(UUID.randomUUID().toString());
+        newRefreshToken.setTokenHash(tokenHasher.hash(rawRefreshToken));
         newRefreshToken.setUser(foundUser);
         newRefreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
-        RefreshToken savedRefreshToken = refreshTokenRepository.save(newRefreshToken);
+        refreshTokenRepository.save(newRefreshToken);
 
         return new AuthResponseDTO(
                 foundUser.getUserId(),
                 foundUser.getUserName(),
                 foundUser.getEmail(),
                 token,
-                savedRefreshToken.getToken()
+                rawRefreshToken
         );
     }
 
@@ -103,8 +108,10 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponseDTO refreshToken(
             RefreshTokenRequestDTO refreshTokenRequestDTO
     ) {
-        RefreshToken foundRefreshToken = refreshTokenRepository.findByToken(
-                refreshTokenRequestDTO.refreshToken()
+        RefreshToken foundRefreshToken = refreshTokenRepository.findByTokenHash(
+                tokenHasher.hash(
+                        refreshTokenRequestDTO.refreshToken()
+                )
         ).orElseThrow(() -> new InvalidRefreshTokenException(
                 environment.getProperty("Service.INVALID_REFRESH_TOKEN")
         ));
@@ -116,12 +123,15 @@ public class AuthServiceImpl implements AuthService {
         }
         User tokenUser = foundRefreshToken.getUser();
         refreshTokenRepository.delete(foundRefreshToken);
+        String rawRefreshToken = UUID.randomUUID().toString();
         RefreshToken newRefreshToken = new RefreshToken();
-        newRefreshToken.setToken(UUID.randomUUID().toString());
+        newRefreshToken.setTokenHash(
+                tokenHasher.hash(rawRefreshToken)
+        );
         newRefreshToken.setUser(tokenUser);
         newRefreshToken.setExpiryDate(LocalDateTime.now().plusDays(7));
 
-        RefreshToken savedRefreshToken = refreshTokenRepository.save(newRefreshToken);
+        refreshTokenRepository.save(newRefreshToken);
         String newAccessToken = jwtService.generateToken(tokenUser.getUserId());
 
         return new AuthResponseDTO(
@@ -129,7 +139,7 @@ public class AuthServiceImpl implements AuthService {
                 tokenUser.getUserName(),
                 tokenUser.getEmail(),
                 newAccessToken,
-                savedRefreshToken.getToken()
+                rawRefreshToken
         );
     }
 }

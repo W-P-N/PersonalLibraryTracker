@@ -13,7 +13,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer refreshTokenId;
     @Column(unique = true, nullable = false)
-    private String token; // UUID string
+    private String tokenHash;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
