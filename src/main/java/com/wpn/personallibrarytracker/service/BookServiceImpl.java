@@ -118,10 +118,9 @@ public class BookServiceImpl implements BookService {
     public BookDetailsResponseDTO getBookDetails(Integer userId, Integer bookId) {
         validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
-        List<ReadingSessionResponseDTO> readingSessionResponseDTOList = foundBook.getReadingSessions()
+        List<ReadingSessionResponseDTO> readingSessionDetailsResponseDTOList = foundBook.getReadingSessions()
                 .stream().map(readingSession -> new ReadingSessionResponseDTO(
                         readingSession.getReadingSessionId(),
-                        readingSession.getPagesReadInSession(),
                         readingSession.getEndSessionPageNumber(),
                         readingSession.getSessionDateTime()
                 )).toList();
@@ -148,7 +147,7 @@ public class BookServiceImpl implements BookService {
                 foundBook.getTotalPages(),
                 foundBook.getIsbn(),
                 foundBook.getCoverUrl(),
-                readingSessionResponseDTOList,
+                readingSessionDetailsResponseDTOList,
                 noteResponseDTOList,
                 reviewResponseDTO
         );

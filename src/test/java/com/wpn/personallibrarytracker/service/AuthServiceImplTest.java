@@ -12,6 +12,7 @@ import com.wpn.personallibrarytracker.exceptions.InvalidRefreshTokenException;
 import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.repository.RefreshTokenRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
+import com.wpn.personallibrarytracker.utility.TokenHasher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,8 @@ public class AuthServiceImplTest {
     JwtService jwtService;
     @Mock
     PasswordEncoder passwordEncoder;
+    @Mock
+    TokenHasher tokenHasher;
     @Mock
     Environment environment;
 
@@ -105,15 +108,17 @@ public class AuthServiceImplTest {
                 .thenReturn("dummy-jwt-token");
         
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken("dummy-refresh-token");
+        refreshToken.setTokenHash("dummy-refresh-token");
         Mockito.when(refreshTokenRepository.save(Mockito.any(RefreshToken.class)))
                 .thenReturn(refreshToken);
+        Mockito.when(tokenHasher.hash(Mockito.anyString()))
+                .thenReturn("asaw");
 
         AuthResponseDTO responseDTO = authService.loginUser(loginRequestDTO);
 
         Assertions.assertEquals("test", responseDTO.username());
         Assertions.assertEquals("dummy-jwt-token", responseDTO.token());
-        Assertions.assertEquals("dummy-refresh-token", responseDTO.refreshToken());
+        Assertions.assertNotNull(responseDTO.refreshToken());
     }
 
     @Test
@@ -159,11 +164,13 @@ public class AuthServiceImplTest {
         user.setUserName("test");
         oldToken.setUser(user);
 
+        Mockito.when(tokenHasher.hash(Mockito.anyString()))
+                .thenReturn("old-refresh-token");
         Mockito.when(refreshTokenRepository.findByTokenHash(Mockito.anyString()))
                 .thenReturn(Optional.of(oldToken));
         
         RefreshToken newToken = new RefreshToken();
-        newToken.setToken("new-refresh-token");
+        newToken.setTokenHash("new-refresh-token");
         Mockito.when(refreshTokenRepository.save(Mockito.any(RefreshToken.class)))
                 .thenReturn(newToken);
         Mockito.when(jwtService.generateToken(Mockito.anyInt()))
@@ -172,12 +179,14 @@ public class AuthServiceImplTest {
         AuthResponseDTO responseDTO = authService.refreshToken(requestDTO);
 
         Assertions.assertEquals("new-jwt-token", responseDTO.token());
-        Assertions.assertEquals("new-refresh-token", responseDTO.refreshToken());
+        Assertions.assertNotNull(responseDTO.refreshToken());
     }
 
     @Test
     void refreshToken_unHappyPath_shouldThrowInvalidRefreshTokenException_whenTokenNotFound() {
         RefreshTokenRequestDTO requestDTO = new RefreshTokenRequestDTO("non-existent-token");
+        Mockito.when(tokenHasher.hash(Mockito.anyString()))
+                .thenReturn("non-existent-token");
         Mockito.when(refreshTokenRepository.findByTokenHash(Mockito.anyString()))
                 .thenReturn(Optional.empty());
 
@@ -193,6 +202,8 @@ public class AuthServiceImplTest {
         expiredToken.setTokenHash("expired-token");
         expiredToken.setExpiryDate(LocalDateTime.now().minusDays(1));
 
+        Mockito.when(tokenHasher.hash(Mockito.anyString()))
+                .thenReturn("expired-token");
         Mockito.when(refreshTokenRepository.findByTokenHash(Mockito.anyString()))
                 .thenReturn(Optional.of(expiredToken));
 

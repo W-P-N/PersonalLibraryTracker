@@ -1,21 +1,17 @@
 package com.wpn.personallibrarytracker.controller;
 
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionRequestDTO;
-import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionDetailsResponseDTO;
 import com.wpn.personallibrarytracker.service.ReadingSessionService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/books/{bookId}/sessions")
@@ -30,7 +26,7 @@ public class ReadingSessionController {
     }
 
     @PostMapping
-    public ResponseEntity<ReadingSessionResponseDTO> addSession(
+    public ResponseEntity<ReadingSessionDetailsResponseDTO> addSession(
             @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestBody @Valid ReadingSessionRequestDTO readingSessionRequestDTO
@@ -45,7 +41,7 @@ public class ReadingSessionController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ReadingSessionResponseDTO>> getSessions(
+    public ResponseEntity<Page<ReadingSessionDetailsResponseDTO>> getSessions(
             @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
@@ -58,7 +54,7 @@ public class ReadingSessionController {
     }
 
     @GetMapping("/{sessionId}")
-    public ResponseEntity<ReadingSessionResponseDTO> getSessionById(
+    public ResponseEntity<ReadingSessionDetailsResponseDTO> getSessionById(
             @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer sessionId
@@ -69,7 +65,7 @@ public class ReadingSessionController {
     }
 
     @PatchMapping("/{sessionId}")
-    public ResponseEntity<ReadingSessionResponseDTO> updateSession(
+    public ResponseEntity<ReadingSessionDetailsResponseDTO> updateSession(
             @AuthenticationPrincipal Integer userId,
             @PathVariable Integer bookId,
             @PathVariable Integer sessionId,

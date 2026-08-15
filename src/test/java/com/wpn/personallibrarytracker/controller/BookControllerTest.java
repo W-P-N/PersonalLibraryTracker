@@ -5,6 +5,7 @@ import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookFromSearchRequestDTO;
@@ -227,7 +228,7 @@ public class BookControllerTest {
         Integer bookId = 101;
 
         ReadingSessionResponseDTO readingSession = new ReadingSessionResponseDTO(
-                1, 50, 100, java.time.LocalDateTime.now()
+                1, 50, java.time.LocalDateTime.now()
         );
         NoteResponseDTO note = new NoteResponseDTO(
                 1, LocalDateTime.now(), 10

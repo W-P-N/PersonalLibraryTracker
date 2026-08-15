@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @DataJpaTest
@@ -125,6 +126,7 @@ public class NoteRepositoryTest {
     ) {
         Book newBook = new Book();
         newBook.setTitle(title);
+        newBook.setAuthor("Test Author");
         newBook.setTotalPages(totalPages);
         newBook.setUser(user);
         return testEntityManager.persist(newBook);
@@ -137,6 +139,7 @@ public class NoteRepositoryTest {
     ) {
         Note newNote = new Note();
         newNote.setContent(content);
+        newNote.setCreatedAt(LocalDateTime.now());
         newNote.setPageNumber(pageNumber);
         newNote.setBook(book);
         return testEntityManager.persist(newNote);

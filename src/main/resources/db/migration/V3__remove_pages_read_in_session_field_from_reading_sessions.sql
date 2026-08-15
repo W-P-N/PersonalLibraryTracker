@@ -1,0 +1,2 @@
+-- V3__remove_pages_read_in_session_field_from_reading_sessions.sql
+ALTER TABLE reading_sessions DROP COLUMN pages_read_in_session;

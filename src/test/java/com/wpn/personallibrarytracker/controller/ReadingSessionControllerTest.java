@@ -1,7 +1,7 @@
 package com.wpn.personallibrarytracker.controller;
 
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionRequestDTO;
-import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionDetailsResponseDTO;
 import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
 import com.wpn.personallibrarytracker.service.ReadingSessionService;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -65,7 +65,7 @@ public class ReadingSessionControllerTest {
     @Test
     void addSession_shouldReturnCreatedSession() throws Exception {
         ReadingSessionRequestDTO request = new ReadingSessionRequestDTO(50);
-        ReadingSessionResponseDTO response = new ReadingSessionResponseDTO(1, 50, 50, LocalDateTime.now());
+        ReadingSessionDetailsResponseDTO response = new ReadingSessionDetailsResponseDTO(1, 50, 50, LocalDateTime.now());
 
         Mockito.when(readingSessionService.logSession(eq(1), eq(100), any(ReadingSessionRequestDTO.class))).thenReturn(response);
 
@@ -79,10 +79,10 @@ public class ReadingSessionControllerTest {
 
     @Test
     void getSessions_shouldReturnListOfSessionsWithPagination() throws Exception {
-        ReadingSessionResponseDTO session1 = new ReadingSessionResponseDTO(1, 50, 50, LocalDateTime.now());
-        ReadingSessionResponseDTO session2 = new ReadingSessionResponseDTO(2, 20, 70, LocalDateTime.now());
+        ReadingSessionDetailsResponseDTO session1 = new ReadingSessionDetailsResponseDTO(1, 50, 50, LocalDateTime.now());
+        ReadingSessionDetailsResponseDTO session2 = new ReadingSessionDetailsResponseDTO(2, 20, 70, LocalDateTime.now());
 
-        org.springframework.data.domain.Page<ReadingSessionResponseDTO> page = new org.springframework.data.domain.PageImpl<>(List.of(session1, session2));
+        org.springframework.data.domain.Page<ReadingSessionDetailsResponseDTO> page = new org.springframework.data.domain.PageImpl<>(List.of(session1, session2));
 
         Mockito.when(readingSessionService.getSessions(eq(1), eq(100), any(org.springframework.data.domain.Pageable.class)))
                 .thenReturn(page);
@@ -102,7 +102,7 @@ public class ReadingSessionControllerTest {
 
     @Test
     void getSessionById_shouldReturnSessionDetails() throws Exception {
-        ReadingSessionResponseDTO response = new ReadingSessionResponseDTO(1, 50, 50, LocalDateTime.now());
+        ReadingSessionDetailsResponseDTO response = new ReadingSessionDetailsResponseDTO(1, 50, 50, LocalDateTime.now());
 
         Mockito.when(readingSessionService.getSessionById(1, 100, 1)).thenReturn(response);
 
@@ -115,7 +115,7 @@ public class ReadingSessionControllerTest {
     @Test
     void updateSession_shouldReturnUpdatedSession() throws Exception {
         ReadingSessionRequestDTO request = new ReadingSessionRequestDTO(60);
-        ReadingSessionResponseDTO response = new ReadingSessionResponseDTO(1, 60, 60, LocalDateTime.now());
+        ReadingSessionDetailsResponseDTO response = new ReadingSessionDetailsResponseDTO(1, 60, 60, LocalDateTime.now());
 
         Mockito.when(readingSessionService.updateSession(eq(1), eq(100), eq(1), any(ReadingSessionRequestDTO.class))).thenReturn(response);
 

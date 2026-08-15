@@ -1,6 +1,5 @@
 package com.wpn.personallibrarytracker.repository;
 
-import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.ReadingSession;
 import com.wpn.personallibrarytracker.entity.User;

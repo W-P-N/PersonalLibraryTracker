@@ -1,9 +1,10 @@
 package com.wpn.personallibrarytracker.service;
 
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionRequestDTO;
-import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionDetailsResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.ReadingSession;
+import com.wpn.personallibrarytracker.projections.ReadingSessionProjection;
 import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.ReadingSessionNotFound;
 import com.wpn.personallibrarytracker.repository.BookRepository;
@@ -30,6 +31,30 @@ import org.springframework.data.domain.Pageable;
 
 @ExtendWith(MockitoExtension.class)
 public class ReadingSessionServiceImplTest {
+    private ReadingSessionProjection mockProjection(Integer id, Integer pagesRead, Integer endPage, LocalDateTime dateTime) {
+        return new ReadingSessionProjection() {
+            @Override
+            public Integer getReadingSessionId() {
+                return id;
+            }
+
+            @Override
+            public LocalDateTime getSessionDateTime() {
+                return dateTime;
+            }
+
+            @Override
+            public Integer getEndSessionPageNumber() {
+                return endPage;
+            }
+
+            @Override
+            public Integer getPagesReadInSession() {
+                return pagesRead;
+            }
+        };
+    }
+
     @Mock
     UserRepository userRepository;
     @Mock
@@ -65,6 +90,8 @@ public class ReadingSessionServiceImplTest {
                     return session;
                 });
 
+        Mockito.lenient().when(readingSessionRepository.findSessionWithComputedPages(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt()))
+                .thenReturn(java.util.Optional.of(mockProjection(102, 106, 120, java.time.LocalDateTime.now())));
         ReadingSessionRequestDTO readingSessionRequestDTO = new ReadingSessionRequestDTO(
                 120
         );
@@ -82,16 +109,16 @@ public class ReadingSessionServiceImplTest {
                 ))
                 .thenReturn(Optional.of(previousSession));
         // Act
-        ReadingSessionResponseDTO readingSessionResponseDTO = readingSessionService.logSession(
+        ReadingSessionDetailsResponseDTO readingSessionDetailsResponseDTO = readingSessionService.logSession(
                 newUser.getUserId(),
                 newBook.getBookId(),
                 readingSessionRequestDTO
         );
         // Assert
-        Assertions.assertNotNull(readingSessionResponseDTO);
-        Assertions.assertNotNull(readingSessionResponseDTO.readingSessionId());
-        Assertions.assertEquals(106, readingSessionResponseDTO.pagesReadInSession());
-        Assertions.assertEquals(120, readingSessionResponseDTO.endSessionPageNumber());
+        Assertions.assertNotNull(readingSessionDetailsResponseDTO);
+        Assertions.assertNotNull(readingSessionDetailsResponseDTO.readingSessionId());
+        Assertions.assertEquals(106, readingSessionDetailsResponseDTO.pagesReadInSession());
+        Assertions.assertEquals(120, readingSessionDetailsResponseDTO.endSessionPageNumber());
 
         // Verify
         Mockito.verify(userRepository, Mockito.times(1)).existsById(Mockito.anyInt());
@@ -123,6 +150,8 @@ public class ReadingSessionServiceImplTest {
                     return session;
                 });
 
+        Mockito.lenient().when(readingSessionRepository.findSessionWithComputedPages(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt()))
+                .thenReturn(Optional.of(mockProjection(102, 50, 50, LocalDateTime.now())));
         ReadingSessionRequestDTO readingSessionRequestDTO = new ReadingSessionRequestDTO(
                 50 // First session reading up to page 50
         );
@@ -134,7 +163,7 @@ public class ReadingSessionServiceImplTest {
                 Mockito.anyInt(), Mockito.anyInt())).thenReturn(Optional.empty());
 
         // Act
-        ReadingSessionResponseDTO response = readingSessionService.logSession(
+        ReadingSessionDetailsResponseDTO response = readingSessionService.logSession(
                 newUser.getUserId(), newBook.getBookId(), readingSessionRequestDTO
         );
 
@@ -262,21 +291,23 @@ public class ReadingSessionServiceImplTest {
 
         ReadingSession session = new ReadingSession();
         session.setReadingSessionId(100);
-        session.setPagesReadInSession(20);
         session.setEndSessionPageNumber(50);
         session.setSessionDateTime(LocalDateTime.now());
 
         Pageable pageable = PageRequest.of(0, 10);
-        org.springframework.data.domain.Page<ReadingSession> readingSessionPage = new org.springframework.data.domain.PageImpl<>(List.of(session));
+        ReadingSessionProjection sessionProjection = mockProjection(100, 50, 50, LocalDateTime.now());
+        org.springframework.data.domain.Page<ReadingSessionProjection> readingSessionPage =
+                new org.springframework.data.domain.PageImpl<>(List.of(sessionProjection));
 
         Mockito.when(userRepository.existsById(Mockito.anyInt())).thenReturn(true);
         Mockito.when(bookRepository.existsByBookIdAndUserUserId(Mockito.anyInt(), Mockito.anyInt()))
                 .thenReturn(true);
-        Mockito.when(readingSessionRepository.findByBookBookIdAndBookUserUserId(Mockito.anyInt(), Mockito.anyInt(), Mockito.any(Pageable.class)))
+        Mockito.when(readingSessionRepository.findSessionsWithComputedPages(
+                Mockito.anyInt(), Mockito.anyInt(), Mockito.any(Pageable.class)))
                 .thenReturn(readingSessionPage);
 
         // Act
-        org.springframework.data.domain.Page<ReadingSessionResponseDTO> result = readingSessionService.getSessions(1, 10, pageable);
+        org.springframework.data.domain.Page<ReadingSessionDetailsResponseDTO> result = readingSessionService.getSessions(1, 10, pageable);
 
         // Assert
         Assertions.assertNotNull(result);
@@ -285,7 +316,7 @@ public class ReadingSessionServiceImplTest {
         
         Mockito.verify(userRepository).existsById(1);
         Mockito.verify(bookRepository).existsByBookIdAndUserUserId(10, 1);
-        Mockito.verify(readingSessionRepository).findByBookBookIdAndBookUserUserId(10, 1, pageable);
+        Mockito.verify(readingSessionRepository).findSessionsWithComputedPages(10, 1, pageable);
     }
 
     @Test
@@ -339,7 +370,6 @@ public class ReadingSessionServiceImplTest {
 
         ReadingSession mockReadingSession = new ReadingSession();
         mockReadingSession.setReadingSessionId(12);
-        mockReadingSession.setPagesReadInSession(20);
         mockReadingSession.setEndSessionPageNumber(50);
         mockReadingSession.setSessionDateTime(LocalDateTime.now());
         mockReadingSession.setBook(mockBook);
@@ -350,31 +380,23 @@ public class ReadingSessionServiceImplTest {
                                 Mockito.anyInt(), Mockito.anyInt()
                         ))
                         .thenReturn(true);
-        Mockito.when(
-                    readingSessionRepository
-                            .findByReadingSessionIdAndBookBookIdAndBookUserUserId(
-                                    Mockito.anyInt(),
-                                    Mockito.anyInt(),
-                                    Mockito.anyInt()
-                            )
-                )
-                .thenReturn(Optional.of(mockReadingSession));
+        Mockito.when(readingSessionRepository.findSessionWithComputedPages(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt())).thenReturn(java.util.Optional.of(mockProjection(12, 20, 50, java.time.LocalDateTime.now())));
         // Act
-        ReadingSessionResponseDTO readingSessionResponseDTO = readingSessionService.getSessionById(
+        ReadingSessionDetailsResponseDTO readingSessionDetailsResponseDTO = readingSessionService.getSessionById(
                1,
                 10,
                 12
         );
         // Assert
-        Assertions.assertNotNull(readingSessionResponseDTO);
-        Assertions.assertEquals(12, readingSessionResponseDTO.readingSessionId());
-        Assertions.assertEquals(20, readingSessionResponseDTO.pagesReadInSession());
-        Assertions.assertEquals(50, readingSessionResponseDTO.endSessionPageNumber());
+        Assertions.assertNotNull(readingSessionDetailsResponseDTO);
+        Assertions.assertEquals(12, readingSessionDetailsResponseDTO.readingSessionId());
+        Assertions.assertEquals(20, readingSessionDetailsResponseDTO.pagesReadInSession());
+        Assertions.assertEquals(50, readingSessionDetailsResponseDTO.endSessionPageNumber());
 
         // Verify
         Mockito.verify(userRepository).existsById(1);
         Mockito.verify(bookRepository).existsByBookIdAndUserUserId(10, 1);
-        Mockito.verify(readingSessionRepository).findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+        Mockito.verify(readingSessionRepository).findSessionWithComputedPages(
                 12,
                 10,
                 1
@@ -396,7 +418,7 @@ public class ReadingSessionServiceImplTest {
 
         Mockito.verify(bookRepository, Mockito.never()).existsByBookIdAndUserUserId(Mockito.anyInt(), Mockito.anyInt());
         Mockito.verify(readingSessionRepository, Mockito.never())
-                .findByReadingSessionIdAndBookBookIdAndBookUserUserId(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt());
+                .findSessionWithComputedPages(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt());
     }
 
     @Test
@@ -415,7 +437,7 @@ public class ReadingSessionServiceImplTest {
                 () -> readingSessionService.getSessionById(userId, bookId, sessionId));
 
         Mockito.verify(readingSessionRepository, Mockito.never())
-                .findByReadingSessionIdAndBookBookIdAndBookUserUserId(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt());
+                .findSessionWithComputedPages(Mockito.anyInt(), Mockito.anyInt(), Mockito.anyInt());
     }
 
     @Test
@@ -427,7 +449,7 @@ public class ReadingSessionServiceImplTest {
         Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.existsByBookIdAndUserUserId(bookId, userId))
                 .thenReturn(true);
-        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+        Mockito.when(readingSessionRepository.findSessionWithComputedPages(
                 sessionId, bookId, userId))
                 .thenReturn(Optional.empty());
         Mockito.when(environment.getProperty("Service.READING_SESSION_NOT_FOUND"))
@@ -437,7 +459,7 @@ public class ReadingSessionServiceImplTest {
                 () -> readingSessionService.getSessionById(userId, bookId, sessionId));
 
         Mockito.verify(readingSessionRepository)
-                .findByReadingSessionIdAndBookBookIdAndBookUserUserId(sessionId, bookId, userId);
+                .findSessionWithComputedPages(sessionId, bookId, userId);
     }
 
 
@@ -455,7 +477,6 @@ public class ReadingSessionServiceImplTest {
 
         ReadingSession mockReadingSession = new ReadingSession();
         mockReadingSession.setReadingSessionId(12);
-        mockReadingSession.setPagesReadInSession(20);
         mockReadingSession.setEndSessionPageNumber(50);
         mockReadingSession.setSessionDateTime(LocalDateTime.now());
         mockReadingSession.setBook(mockBook);
@@ -470,13 +491,11 @@ public class ReadingSessionServiceImplTest {
                 Mockito.anyInt()
         ))
                 .thenReturn(Optional.of(mockBook));
-        Mockito.when(readingSessionRepository
-                .findByReadingSessionIdAndBookBookIdAndBookUserUserId(
-                        Mockito.anyInt(),
-                        Mockito.anyInt(),
-                        Mockito.anyInt()
-                ))
-                .thenReturn(Optional.of(mockReadingSession));
+        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+                12, 10, 1
+        )).thenReturn(Optional.of(mockReadingSession));
+        Mockito.when(readingSessionRepository.findSessionWithComputedPages(12, 10, 1))
+                .thenReturn(Optional.of(mockProjection(12, 55, 55, mockReadingSession.getSessionDateTime())));
         Mockito.when(readingSessionRepository
                 .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeBeforeOrderBySessionDateTimeDesc(
                         Mockito.anyInt(),
@@ -500,15 +519,15 @@ public class ReadingSessionServiceImplTest {
                     return savedReadingSession;
                 });
         // Act
-        ReadingSessionResponseDTO mockReadingSessionResponseDTO = readingSessionService
+        ReadingSessionDetailsResponseDTO mockReadingSessionDetailsResponseDTO = readingSessionService
                 .updateSession(1, 10, 12, mockReadingSessionRequestDTO);
         // Assert
-        Assertions.assertEquals(55, mockReadingSessionResponseDTO.endSessionPageNumber());
-        Assertions.assertEquals(55, mockReadingSessionResponseDTO.pagesReadInSession());
+        Assertions.assertEquals(55, mockReadingSessionDetailsResponseDTO.endSessionPageNumber());
+        Assertions.assertEquals(55, mockReadingSessionDetailsResponseDTO.pagesReadInSession());
         //Verify
         Mockito.verify(userRepository).existsById(1);
         Mockito.verify(bookRepository).findByBookIdAndUserUserId(10, 1);
-        Mockito.verify(readingSessionRepository).findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+        Mockito.verify(readingSessionRepository).findSessionWithComputedPages(
                 12,
                 10,
                 1
@@ -541,6 +560,9 @@ public class ReadingSessionServiceImplTest {
         Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
                 sessionId, bookId, userId))
                 .thenReturn(Optional.of(foundReadingSession));
+        Mockito.when(readingSessionRepository.findSessionWithComputedPages(
+                sessionId, bookId, userId))
+                .thenReturn(Optional.of(mockProjection(100, 30, 70, foundReadingSession.getSessionDateTime())));
         Mockito.when(readingSessionRepository
                 .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeBeforeOrderBySessionDateTimeDesc(
                         bookId, userId, foundReadingSession.getSessionDateTime()))
@@ -552,7 +574,7 @@ public class ReadingSessionServiceImplTest {
         Mockito.when(readingSessionRepository.save(Mockito.any(ReadingSession.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ReadingSessionResponseDTO response = readingSessionService.updateSession(
+        ReadingSessionDetailsResponseDTO response = readingSessionService.updateSession(
                 userId, bookId, sessionId, requestDTO
         );
 
@@ -596,6 +618,9 @@ public class ReadingSessionServiceImplTest {
         Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
                 sessionId, bookId, userId))
                 .thenReturn(Optional.of(foundReadingSession));
+        Mockito.when(readingSessionRepository.findSessionWithComputedPages(
+                sessionId, bookId, userId))
+                .thenReturn(Optional.of(mockProjection(100, 30, 70, foundReadingSession.getSessionDateTime())));
         Mockito.when(readingSessionRepository
                 .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeBeforeOrderBySessionDateTimeDesc(
                         bookId, userId, foundReadingSession.getSessionDateTime()))
@@ -607,7 +632,7 @@ public class ReadingSessionServiceImplTest {
         Mockito.when(readingSessionRepository.save(Mockito.any(ReadingSession.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ReadingSessionResponseDTO response = readingSessionService.updateSession(
+        ReadingSessionDetailsResponseDTO response = readingSessionService.updateSession(
                 userId, bookId, sessionId, requestDTO
         );
 
@@ -618,9 +643,8 @@ public class ReadingSessionServiceImplTest {
                 () -> Assertions.assertEquals(70, response.endSessionPageNumber()),
                 () -> Assertions.assertEquals(foundReadingSession.getSessionDateTime(), response.sessionDateTime())
         );
-        Assertions.assertEquals(50, nextSession.getPagesReadInSession());
-        Mockito.verify(readingSessionRepository, Mockito.times(1)).save(nextSession);
         Mockito.verify(readingSessionRepository, Mockito.times(1)).save(foundReadingSession);
+        Mockito.verify(readingSessionRepository, Mockito.never()).save(nextSession);
     }
 
     @Test
@@ -739,41 +763,25 @@ public class ReadingSessionServiceImplTest {
 
     // --- Tests for deleteSession ---
     @Test
-    void deleteSession_happyPath_shouldUpdateNextSessionAndDeleteCurrentSession() {
+    void deleteSession_happyPath_shouldDeleteCurrentSession() {
         Integer userId = 1;
         Integer bookId = 10;
         Integer sessionId = 100;
 
-        LocalDateTime currentDateTime = LocalDateTime.of(2026, 7, 13, 10, 0);
         ReadingSession currentSession = new ReadingSession();
         currentSession.setReadingSessionId(sessionId);
-        currentSession.setSessionDateTime(currentDateTime);
-
-        ReadingSession nextSession = new ReadingSession();
-        nextSession.setReadingSessionId(101);
-        nextSession.setEndSessionPageNumber(150);
-
-        ReadingSession previousSession = new ReadingSession();
-        previousSession.setReadingSessionId(99);
-        previousSession.setEndSessionPageNumber(90);
+        currentSession.setSessionDateTime(LocalDateTime.of(2026, 7, 13, 10, 0));
 
         Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.existsByBookIdAndUserUserId(bookId, userId)).thenReturn(true);
-        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(sessionId, bookId, userId))
+        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+                sessionId, bookId, userId))
                 .thenReturn(Optional.of(currentSession));
-        Mockito.when(readingSessionRepository
-                .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeAfterOrderBySessionDateTimeAsc(
-                        bookId, userId, currentDateTime))
-                .thenReturn(Optional.of(nextSession));
-        Mockito.when(readingSessionRepository
-                .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeBeforeOrderBySessionDateTimeDesc(
-                        bookId, userId, currentDateTime))
-                .thenReturn(Optional.of(previousSession));
 
         Assertions.assertDoesNotThrow(() -> readingSessionService.deleteSession(userId, bookId, sessionId));
-        Assertions.assertEquals(60, nextSession.getPagesReadInSession());
-        Mockito.verify(readingSessionRepository).save(nextSession);
+
         Mockito.verify(readingSessionRepository).delete(currentSession);
+        Mockito.verify(readingSessionRepository, Mockito.never()).save(Mockito.any());
     }
 
     @Test
@@ -782,19 +790,15 @@ public class ReadingSessionServiceImplTest {
         Integer bookId = 10;
         Integer sessionId = 100;
 
-        LocalDateTime currentDateTime = LocalDateTime.of(2026, 7, 13, 10, 0);
         ReadingSession currentSession = new ReadingSession();
         currentSession.setReadingSessionId(sessionId);
-        currentSession.setSessionDateTime(currentDateTime);
+        currentSession.setSessionDateTime(LocalDateTime.of(2026, 7, 13, 10, 0));
 
         Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.existsByBookIdAndUserUserId(bookId, userId)).thenReturn(true);
-        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(sessionId, bookId, userId))
+        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+                sessionId, bookId, userId))
                 .thenReturn(Optional.of(currentSession));
-        Mockito.when(readingSessionRepository
-                .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeAfterOrderBySessionDateTimeAsc(
-                        bookId, userId, currentDateTime))
-                .thenReturn(Optional.empty());
 
         Assertions.assertDoesNotThrow(() -> readingSessionService.deleteSession(userId, bookId, sessionId));
 
@@ -803,35 +807,24 @@ public class ReadingSessionServiceImplTest {
     }
 
     @Test
-    void deleteSession_whenNoPreviousSession_shouldUseNextEndPageNumber() {
+    void deleteSession_whenNoPreviousSession_shouldDeleteCurrentSession() {
         Integer userId = 1;
         Integer bookId = 10;
         Integer sessionId = 100;
 
-        LocalDateTime currentDateTime = LocalDateTime.of(2026, 7, 13, 10, 0);
         ReadingSession currentSession = new ReadingSession();
         currentSession.setReadingSessionId(sessionId);
-        currentSession.setSessionDateTime(currentDateTime);
-
-        ReadingSession nextSession = new ReadingSession();
-        nextSession.setReadingSessionId(101);
-        nextSession.setEndSessionPageNumber(150);
+        currentSession.setSessionDateTime(LocalDateTime.of(2026, 7, 13, 10, 0));
 
         Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.existsByBookIdAndUserUserId(bookId, userId)).thenReturn(true);
-        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(sessionId, bookId, userId))
+        Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+                sessionId, bookId, userId))
                 .thenReturn(Optional.of(currentSession));
-        Mockito.when(readingSessionRepository
-                .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeAfterOrderBySessionDateTimeAsc(
-                        bookId, userId, currentDateTime))
-                .thenReturn(Optional.of(nextSession));
-        Mockito.when(readingSessionRepository
-                .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeBeforeOrderBySessionDateTimeDesc(
-                        bookId, userId, currentDateTime))
-                .thenReturn(Optional.empty());
 
         Assertions.assertDoesNotThrow(() -> readingSessionService.deleteSession(userId, bookId, sessionId));
-        Mockito.verify(readingSessionRepository).save(nextSession);
+
         Mockito.verify(readingSessionRepository).delete(currentSession);
+        Mockito.verify(readingSessionRepository, Mockito.never()).save(Mockito.any());
     }
 }

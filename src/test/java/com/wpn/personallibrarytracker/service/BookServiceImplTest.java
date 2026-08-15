@@ -250,7 +250,6 @@ public class BookServiceImplTest {
 
         ReadingSession session = new ReadingSession();
         session.setReadingSessionId(1);
-        session.setPagesReadInSession(50);
         session.setEndSessionPageNumber(100);
         session.setSessionDateTime(java.time.LocalDateTime.of(2026, 6, 30, 10, 0));
         book.setReadingSessions(List.of(session));
