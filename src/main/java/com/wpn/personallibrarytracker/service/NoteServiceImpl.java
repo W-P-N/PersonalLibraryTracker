@@ -6,13 +6,10 @@ import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.Note;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.InvalidPageNumberException;
-import com.wpn.personallibrarytracker.exceptions.NoteNotFoundException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.NoteRepository;
-import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,18 +20,15 @@ import java.time.LocalDateTime;
 
 @Service("noteService")
 public class NoteServiceImpl implements NoteService{
-    private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final NoteRepository noteRepository;
     private final Environment environment;
 
     public NoteServiceImpl(
-            UserRepository userRepository,
             BookRepository bookRepository,
             NoteRepository noteRepository,
             Environment environment
     ) {
-        this.userRepository = userRepository;
         this.bookRepository = bookRepository;
         this.noteRepository = noteRepository;
         this.environment = environment;
@@ -47,7 +41,6 @@ public class NoteServiceImpl implements NoteService{
             Integer userId,
             NoteRequestDTO noteRequestDTO
     ) {
-        validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
         if(
                 noteRequestDTO.pageNumber() != null &&
@@ -76,8 +69,11 @@ public class NoteServiceImpl implements NoteService{
     public Page<NoteResponseDTO> getNotes(
             Integer bookId, Integer userId, Pageable pageable
     ) {
-        validateUserExists(userId);
-        validateBookByUserExists(bookId, userId);
+        if(!bookRepository.existsByBookIdAndUserUserId(bookId, userId)) {
+            throw new ResourceNotFoundException(
+                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+            );
+        }
         Page<Note> notePages = noteRepository.findByBookBookIdAndBookUserUserId(
                 bookId,
                 userId,
@@ -97,8 +93,6 @@ public class NoteServiceImpl implements NoteService{
     public NoteDetailsResponseDTO getNoteById(
             Integer noteId, Integer bookId, Integer userId
     ) {
-        validateUserExists(userId);
-        validateBookByUserExists(bookId, userId);
         Note foundNote = getNoteByBookAndUser(noteId, bookId, userId);
         return new NoteDetailsResponseDTO(
                 foundNote.getNoteId(),
@@ -116,7 +110,6 @@ public class NoteServiceImpl implements NoteService{
             Integer userId,
             NoteUpdateRequestDTO noteUpdateRequestDTO
     ) {
-        validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
         if(
                 noteUpdateRequestDTO.pageNumber() != null &&
@@ -147,8 +140,6 @@ public class NoteServiceImpl implements NoteService{
     public void deleteNote(
             Integer noteId, Integer bookId, Integer userId
     ) {
-        validateUserExists(userId);
-        validateBookByUserExists(bookId, userId);
         Note foundNote = getNoteByBookAndUser(
                 noteId, bookId, userId
         );
@@ -156,26 +147,10 @@ public class NoteServiceImpl implements NoteService{
     }
 
     // Utility functions
-    void validateUserExists(Integer userId) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-    };
-
-    void validateBookByUserExists(Integer bookId, Integer userId) {
-        if(!bookRepository.existsByBookIdAndUserUserId(bookId, userId)) {
-            throw new BookNotFoundForUserException(
-                    environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
-            );
-        };
-    };
-
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
-                .orElseThrow(() -> new BookNotFoundForUserException(
-                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
     };
 
@@ -185,8 +160,8 @@ public class NoteServiceImpl implements NoteService{
                 bookId,
                 userId
         )
-        .orElseThrow(() -> new NoteNotFoundException(
-                environment.getProperty("Service.NOTE_NOT_FOUND")
+        .orElseThrow(() -> new ResourceNotFoundException(
+                environment.getProperty("Service.RESOURCE_NOT_FOUND")
         ));
     }
 

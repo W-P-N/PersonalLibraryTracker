@@ -3,8 +3,7 @@ package com.wpn.personallibrarytracker.controller;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
-import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
 import com.wpn.personallibrarytracker.service.JwtService;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -71,7 +70,7 @@ public class UserControllerTest {
 
     @Test
     void getUser_shouldReturn404_whenNotFound() throws Exception {
-        Mockito.when(userService.getUser(1)).thenThrow(new UserNotFoundException("User not found"));
+        Mockito.when(userService.getUser(1)).thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(get("/users/me")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -99,7 +98,7 @@ public class UserControllerTest {
         );
         UserUpdateRequestDTO userUpdateRequestDTO = new UserUpdateRequestDTO("test1", "test@123.com");
         Mockito.when(userService.updateUser(123, userUpdateRequestDTO))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
         mockMvc.perform(put("/users/me", 123)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userUpdateRequestDTO)))
@@ -124,7 +123,7 @@ public class UserControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
             new UsernamePasswordAuthenticationToken(mockUserId, null, java.util.Collections.emptyList())
         );
-        Mockito.doThrow(new UserNotFoundException("User not found"))
+        Mockito.doThrow(new ResourceNotFoundException("User not found"))
                 .when(userService).deleteUser(mockUserId);
         mockMvc.perform(delete("/users/me", mockUserId))
                 .andExpect(status().isNotFound());

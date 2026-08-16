@@ -9,7 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 import com.wpn.personallibrarytracker.dto.statsDTOs.StatsResponseDTO;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.service.StatsService;
 import com.wpn.personallibrarytracker.service.JwtService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -82,7 +82,7 @@ public class StatsControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
             new UsernamePasswordAuthenticationToken(userId, null, java.util.Collections.emptyList())
         );
-        Mockito.when(statsService.getStats(userId)).thenThrow(new UserNotFoundException("User not found"));
+        Mockito.when(statsService.getStats(userId)).thenThrow(new ResourceNotFoundException("User not found"));
 
         // Act & Assert
         mockMvc.perform(MockMvcRequestBuilders.get("/stats", userId))

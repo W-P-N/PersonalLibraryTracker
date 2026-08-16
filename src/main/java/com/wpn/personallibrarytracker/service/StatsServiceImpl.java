@@ -1,10 +1,7 @@
 package com.wpn.personallibrarytracker.service;
 
 import com.wpn.personallibrarytracker.dto.statsDTOs.StatsResponseDTO;
-import com.wpn.personallibrarytracker.entity.Book;
-import com.wpn.personallibrarytracker.entity.ReadingSession;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
-import com.wpn.personallibrarytracker.projections.ReadingSessionProjection;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.projections.ReadingSessionStatsProjection;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.ReadingSessionRepository;
@@ -45,7 +42,11 @@ public class StatsServiceImpl implements StatsService{
     @Override
     @Transactional(readOnly = true)
     public StatsResponseDTO getStats(Integer userId) {
-        validateUserExists(userId);
+        if(!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException(
+                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+            );
+        }
         Long totalBooks = bookRepository.countByUserUserId(userId);
         // Get list of reading sessions of the user
         List<ReadingSessionStatsProjection> readingSessionList = readingSessionRepository
@@ -109,13 +110,4 @@ public class StatsServiceImpl implements StatsService{
 
         );
     }
-
-    // Utility methods
-    void validateUserExists(Integer userId) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-    };
 }

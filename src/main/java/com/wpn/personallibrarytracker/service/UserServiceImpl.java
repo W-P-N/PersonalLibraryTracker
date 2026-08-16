@@ -3,7 +3,7 @@ package com.wpn.personallibrarytracker.service;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.User;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -21,10 +21,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserResponseDTO getUser(Integer userId) throws UserNotFoundException {
+    public UserResponseDTO getUser(Integer userId) {
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(
-                        environment.getProperty("Service.USER_NOT_FOUND")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
         return new UserResponseDTO(
                 foundUser.getUserId(),
@@ -35,10 +35,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponseDTO updateUser(Integer userId, UserUpdateRequestDTO userUpdateRequestDTO) throws UserNotFoundException {
+    public UserResponseDTO updateUser(Integer userId, UserUpdateRequestDTO userUpdateRequestDTO) {
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(
-                        environment.getProperty("Service.USER_NOT_FOUND")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
         foundUser.setUserName(userUpdateRequestDTO.userName());
         foundUser.setEmail(userUpdateRequestDTO.email());
@@ -51,10 +51,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(Integer userId) throws UserNotFoundException {
+    public void deleteUser(Integer userId) {
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(
-                        environment.getProperty("Service.USER_NOT_FOUND")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
         userRepository.delete(foundUser);
     }

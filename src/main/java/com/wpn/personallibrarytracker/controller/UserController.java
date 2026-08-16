@@ -1,13 +1,10 @@
 package com.wpn.personallibrarytracker.controller;
 
-import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
-import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,7 +26,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<UserResponseDTO> getUser(
             @AuthenticationPrincipal Integer userId
-    ) throws UserNotFoundException {
+    ) throws ResourceNotFoundException {
         UserResponseDTO userResponseDTO = userService.getUser(userId);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
@@ -41,7 +38,7 @@ public class UserController {
             @Valid
             @RequestBody
             UserUpdateRequestDTO userUpdateRequestDTO
-    ) throws UserNotFoundException {
+    ) throws ResourceNotFoundException {
         UserResponseDTO userResponseDTO = userService.updateUser(userId, userUpdateRequestDTO);
         return new ResponseEntity<>(userResponseDTO, HttpStatus.OK);
     }
@@ -50,7 +47,7 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(
             @AuthenticationPrincipal
             Integer userId
-    ) throws UserNotFoundException {
+    ) throws ResourceNotFoundException {
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }

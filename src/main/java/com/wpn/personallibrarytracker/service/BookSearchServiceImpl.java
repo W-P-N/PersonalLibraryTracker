@@ -17,12 +17,16 @@ import java.util.stream.Collectors;
 
 @Service(value = "bookSearchService")
 public class BookSearchServiceImpl implements BookSearchService {
+    private final RestTemplate restTemplate;
+    private final Environment environment;
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private Environment environment;
+    BookSearchServiceImpl(
+            RestTemplate restTemplate,
+            Environment environment
+    ) {
+        this.restTemplate = restTemplate;
+        this.environment = environment;
+    }
 
     @Override
     @Transactional(readOnly = true)

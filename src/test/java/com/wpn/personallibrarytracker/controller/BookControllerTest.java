@@ -9,8 +9,7 @@ import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionDetai
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookFromSearchRequestDTO;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
 import com.wpn.personallibrarytracker.service.JwtService;
 import org.junit.jupiter.api.AfterEach;
@@ -122,7 +121,7 @@ public class BookControllerTest {
         );
 
         Mockito.when(bookService.addBook(eq(userId), any(BookRequestDTO.class)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         // Act & Assert
         mockMvc.perform(post("/books")
@@ -213,7 +212,7 @@ public class BookControllerTest {
             new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList())
         );
         Mockito.when(bookService.getBooksByUser(eq(userId), any(Pageable.class)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         // Act & Assert
         mockMvc.perform(get("/books")
@@ -274,7 +273,7 @@ public class BookControllerTest {
         );
 
         Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         // Act & Assert
         mockMvc.perform(get("/books/{bookId}", bookId)
@@ -289,7 +288,7 @@ public class BookControllerTest {
         Integer bookId = 999;
 
         Mockito.when(bookService.getBookDetails(eq(userId), eq(bookId)))
-                .thenThrow(new BookNotFoundForUserException("Book not found for user"));
+                .thenThrow(new ResourceNotFoundException("Book not found for user"));
 
         // Act & Assert
         mockMvc.perform(get("/books/{bookId}", bookId)
@@ -353,7 +352,7 @@ public class BookControllerTest {
                 "https://wer.sfg.rwt"
         );
         Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
-                .thenThrow(UserNotFoundException.class);
+                .thenThrow(ResourceNotFoundException.class);
         // Act
         mockMvc.perform(patch("/books/{bookId}", mockBookId)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -378,7 +377,7 @@ public class BookControllerTest {
                 "https://wer.sfg.rwt"
         );
         Mockito.when(bookService.updateBook(mockUserId, mockBookId, mockBookUpdateRequestDTO))
-                .thenThrow(BookNotFoundForUserException.class);
+                .thenThrow(ResourceNotFoundException.class);
         // Act
         mockMvc.perform(patch("/books/{bookId}", mockBookId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -419,7 +418,7 @@ public class BookControllerTest {
             new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
         );
 
-        Mockito.doThrow(UserNotFoundException.class)
+        Mockito.doThrow(ResourceNotFoundException.class)
                 .when(bookService)
                 .deleteBook(mockUserId, mockBookId);
 
@@ -438,7 +437,7 @@ public class BookControllerTest {
             new UsernamePasswordAuthenticationToken(mockUserId, null, Collections.emptyList())
         );
 
-        Mockito.doThrow(BookNotFoundForUserException.class)
+        Mockito.doThrow(ResourceNotFoundException.class)
                 .when(bookService)
                 .deleteBook(mockUserId, mockBookId);
 

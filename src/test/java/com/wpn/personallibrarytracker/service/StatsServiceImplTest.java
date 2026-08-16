@@ -12,9 +12,8 @@ import org.springframework.core.env.Environment;
 
 import com.wpn.personallibrarytracker.dto.statsDTOs.StatsResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
-import com.wpn.personallibrarytracker.entity.ReadingSession;
 import com.wpn.personallibrarytracker.projections.ReadingSessionStatsProjection;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -130,10 +129,13 @@ public class StatsServiceImplTest {
         // Arrange
         Integer userId = 999;
         when(userRepository.existsById(userId)).thenReturn(false);
-        when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
+        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
 
         // Act & Assert
-        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> statsService.getStats(userId));
-        assertEquals("User not found", exception.getMessage());
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class, () -> statsService.getStats(userId)
+        );
+        assertEquals("The requested resource was not found", exception.getMessage());
     }
 }

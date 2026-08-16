@@ -1,11 +1,9 @@
 package com.wpn.personallibrarytracker.service;
 
-import com.wpn.personallibrarytracker.dto.userDTOs.UserCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserResponseDTO;
 import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.User;
-import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -29,7 +27,6 @@ public class UserServiceImplTest {
 
     @Test
     void getUserById_shouldReturnUserResponseDTO_whenUserIdIsFound() {
-        // Arrange
         User foundUser = new User();
         foundUser.setUserId(12345);
         foundUser.setUserName("test");
@@ -42,29 +39,22 @@ public class UserServiceImplTest {
                 foundUser.getEmail()
         );
 
-        Mockito.when(userRepository.findById(Mockito.anyInt()))
+        Mockito.when(userRepository.findById(12345))
                 .thenReturn(Optional.of(foundUser));
 
-        // Act and Assert
-        Assertions.assertEquals(
-                userService.getUser(Mockito.anyInt()),
-                userResponseDTO
-        );
-        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+        Assertions.assertEquals(userResponseDTO, userService.getUser(12345));
+        Mockito.verify(userRepository, Mockito.times(1)).findById(12345);
     }
 
     @Test
-    void getUserById_shouldThrowUserNotFoundException_whenUserIdIsNotFound() {
-        // Arrange
-        Mockito.when(userRepository.findById(Mockito.anyInt()))
+    void getUserById_shouldThrowResourceNotFoundException_whenUserIdIsNotFound() {
+        Mockito.when(userRepository.findById(12345))
                 .thenReturn(Optional.empty());
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
 
-        // Act and Assert
-        Assertions.assertThrows(UserNotFoundException.class, () -> {
-            userService.getUser(12345);
-        });
-        
-        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.getUser(12345));
+        Mockito.verify(userRepository, Mockito.times(1)).findById(12345);
     }
 
     @Test
@@ -86,27 +76,30 @@ public class UserServiceImplTest {
                 userUpdateRequestDTO.email()
         );
 
-        Mockito.when(userRepository.findById(Mockito.anyInt()))
+        Mockito.when(userRepository.findById(12345))
                 .thenReturn(Optional.of(foundUser));
 
-        UserResponseDTO expectedUserResponseDTO = userService.updateUser(Mockito.anyInt(), userUpdateRequestDTO);
+        UserResponseDTO expectedUserResponseDTO = userService.updateUser(12345, userUpdateRequestDTO);
 
-        Assertions.assertEquals(expectedUserResponseDTO, userResponseDTO);
-        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+        Assertions.assertEquals(userResponseDTO, expectedUserResponseDTO);
+        Mockito.verify(userRepository, Mockito.times(1)).findById(12345);
     }
 
     @Test
-    void updateUserDetailsById_shouldReturnUserNotFound_whenUserIdIsNotFound() {
-        Mockito.when(userRepository.findById(Mockito.anyInt()))
+    void updateUserDetailsById_shouldThrowResourceNotFoundException_whenUserIdIsNotFound() {
+        Mockito.when(userRepository.findById(123))
                 .thenReturn(Optional.empty());
-        Assertions.assertThrows(UserNotFoundException.class, () -> {
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
+
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> {
             userService.updateUser(123, new UserUpdateRequestDTO("test", "test@123.com"));
         });
-        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+        Mockito.verify(userRepository, Mockito.times(1)).findById(123);
     }
 
     @Test
-    void deleteUserById_shouldNothing() {
+    void deleteUserById_shouldDeleteUser_whenUserExists() {
         Integer userId = 1;
         User mockUser = new User();
         mockUser.setUserId(userId);
@@ -122,12 +115,13 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void deleteUserById_shouldThrowUserNotFoundException_whenUserIdIsNotFound() {
-        Mockito.when(userRepository.findById(Mockito.anyInt()))
+    void deleteUserById_shouldThrowResourceNotFoundException_whenUserIdIsNotFound() {
+        Mockito.when(userRepository.findById(12345))
                 .thenReturn(Optional.empty());
-        Assertions.assertThrows(UserNotFoundException.class, () -> {
-            userService.deleteUser(Mockito.anyInt());
-        });
-        Mockito.verify(userRepository, Mockito.times(1)).findById(Mockito.anyInt());
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
+
+        Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(12345));
+        Mockito.verify(userRepository, Mockito.times(1)).findById(12345);
     }
 }

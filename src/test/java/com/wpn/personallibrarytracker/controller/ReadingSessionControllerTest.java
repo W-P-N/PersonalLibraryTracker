@@ -2,7 +2,7 @@ package com.wpn.personallibrarytracker.controller;
 
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionRequestDTO;
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionDetailsResponseDTO;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.service.ReadingSessionService;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -142,7 +142,7 @@ public class ReadingSessionControllerTest {
         ReadingSessionRequestDTO request = new ReadingSessionRequestDTO(50);
 
         Mockito.when(readingSessionService.logSession(eq(1), eq(100), any(ReadingSessionRequestDTO.class)))
-                .thenThrow(new BookNotFoundForUserException("Book not found"));
+                .thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(post("/books/100/sessions")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +153,7 @@ public class ReadingSessionControllerTest {
     @Test
     void getSessionById_shouldReturn404_whenBookNotFound() throws Exception {
         Mockito.when(readingSessionService.getSessionById(1, 100, 1))
-                .thenThrow(new BookNotFoundForUserException("Book not found"));
+                .thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(get("/books/100/sessions/1"))
                 .andExpect(status().isNotFound());
