@@ -5,13 +5,10 @@ import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.Review;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.ReviewAlreadyExistsException;
-import com.wpn.personallibrarytracker.exceptions.ReviewNotFoundForTheBookException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.ReviewRepository;
-import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,18 +19,15 @@ import java.time.LocalDateTime;
 public class ReviewServiceImpl implements ReviewService{
     private final ReviewRepository reviewRepository;
     private final BookRepository bookRepository;
-    private final UserRepository userRepository;
     private  final Environment environment;
 
     public ReviewServiceImpl(
             ReviewRepository reviewRepository,
             BookRepository bookRepository,
-            UserRepository userRepository,
             Environment environment
     ) {
         this.reviewRepository = reviewRepository;
         this.bookRepository = bookRepository;
-        this.userRepository = userRepository;
         this.environment = environment;
     }
 
@@ -44,8 +38,6 @@ public class ReviewServiceImpl implements ReviewService{
             Integer userId,
             ReviewCreateRequestDTO reviewCreateRequestDTO
     ) {
-        // User Exists
-        validateUserExists(userId);
         // Book Exists
         Book foundBook = getBookByUser(bookId, userId);
         // Review Already Exists for the book
@@ -72,16 +64,12 @@ public class ReviewServiceImpl implements ReviewService{
             Integer bookId,
             Integer userId
     ) {
-        // User Exists
-        validateUserExists(userId);
-        // Book Exists
-        validateBookByUserExists(bookId, userId);
         // Get Review
         Review foundReview = reviewRepository
                 .findByBookBookIdAndBookUserUserId(bookId, userId)
                 .orElseThrow(
-                        () -> new ReviewNotFoundForTheBookException(
-                                environment.getProperty("Service.REVIEW_NOT_FOUND_FOR_BOOK")
+                        () -> new ResourceNotFoundException(
+                                environment.getProperty("Service.RESOURCE_NOT_FOUND")
                         )
                 );
         // Return DTO
@@ -99,15 +87,11 @@ public class ReviewServiceImpl implements ReviewService{
             Integer userId,
             ReviewUpdateRequestDTO reviewUpdateRequestDTO
     ) {
-        // User Exists
-        validateUserExists(userId);
-        // Book Exists
-        validateBookByUserExists(bookId, userId);
         // Get Review
         Review foundReview = reviewRepository.findByBookBookIdAndBookUserUserId(bookId, userId)
                 .orElseThrow(
-                        () -> new ReviewNotFoundForTheBookException(
-                                environment.getProperty("Service.REVIEW_NOT_FOUND_FOR_BOOK")
+                        () -> new ResourceNotFoundException(
+                                environment.getProperty("Service.RESOURCE_NOT_FOUND")
                         )
                 );
         // Update Review
@@ -134,15 +118,11 @@ public class ReviewServiceImpl implements ReviewService{
     @Override
     @Transactional
     public void deleteReview(Integer bookId, Integer userId) {
-        // User Exists
-        validateUserExists(userId);
-        // Book Exists
-        validateBookByUserExists(bookId, userId);
         // Get Review
         Review foundReview = reviewRepository.findByBookBookIdAndBookUserUserId(bookId, userId)
                 .orElseThrow(
-                        () -> new ReviewNotFoundForTheBookException(
-                                environment.getProperty("Service.REVIEW_NOT_FOUND_FOR_BOOK")
+                        () -> new ResourceNotFoundException(
+                                environment.getProperty("Service.RESOURCE_NOT_FOUND")
                         )
                 );
         // Delete Review
@@ -150,22 +130,6 @@ public class ReviewServiceImpl implements ReviewService{
     }
 
     // Utility methods
-    void validateUserExists(Integer userId) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-    };
-
-    void validateBookByUserExists(Integer bookId, Integer userId) {
-        if(!bookRepository.existsByBookIdAndUserUserId(bookId, userId)) {
-            throw new BookNotFoundForUserException(
-                    environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
-            );
-        };
-    };
-
     void validateReviewNotAlreadyExists(Integer bookId) {
         if(reviewRepository.existsByBookBookId(bookId)) {
             throw new ReviewAlreadyExistsException(
@@ -176,8 +140,8 @@ public class ReviewServiceImpl implements ReviewService{
 
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
-                .orElseThrow(() -> new BookNotFoundForUserException(
-                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
     };
 }

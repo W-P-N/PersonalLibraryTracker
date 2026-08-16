@@ -4,9 +4,7 @@ import com.wpn.personallibrarytracker.dto.noteDTOs.NoteDetailsResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteRequestDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteResponseDTO;
 import com.wpn.personallibrarytracker.dto.noteDTOs.NoteUpdateRequestDTO;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
-import com.wpn.personallibrarytracker.exceptions.NoteNotFoundException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.service.NoteService;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -85,7 +83,7 @@ public class NoteControllerTest {
     void addNote_unHappyPath_shouldReturn404_whenUserNotFound() throws Exception {
         NoteRequestDTO request = new NoteRequestDTO("Test Note", 5);
         when(noteService.createNote(eq(1), eq(1), any(NoteRequestDTO.class)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(post("/books/1/notes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -97,7 +95,7 @@ public class NoteControllerTest {
     void addNote_unHappyPath_shouldReturn404_whenBookNotFoundForUser() throws Exception {
         NoteRequestDTO request = new NoteRequestDTO("Test Note", 5);
         when(noteService.createNote(eq(1), eq(1), any(NoteRequestDTO.class)))
-                .thenThrow(new BookNotFoundForUserException("Book not found"));
+                .thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(post("/books/1/notes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -123,7 +121,7 @@ public class NoteControllerTest {
     @Test
     void getNotes_unHappyPath_shouldThrow404_whenUserNotFound() throws Exception {
         when(noteService.getNotes(eq(1), eq(1), any(Pageable.class)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(get("/books/1/notes"))
                 .andExpect(status().isNotFound());
@@ -132,7 +130,7 @@ public class NoteControllerTest {
     @Test
     void getNotes_unHappyPath_shouldThrow404_whenBookNotFoundForUser() throws Exception {
         when(noteService.getNotes(eq(1), eq(1), any(Pageable.class)))
-                .thenThrow(new BookNotFoundForUserException("Book not found"));
+                .thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(get("/books/1/notes"))
                 .andExpect(status().isNotFound());
@@ -151,24 +149,9 @@ public class NoteControllerTest {
     }
 
     @Test
-    void getNoteById_unHappyPath_shouldThrow404UserNotFoundException() throws Exception {
-        when(noteService.getNoteById(1, 1, 1)).thenThrow(new UserNotFoundException("User not found"));
-
-        mockMvc.perform(get("/books/1/notes/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getNoteById_unHappyPath_shouldThrow404BookNotFoundForUserException() throws Exception {
-        when(noteService.getNoteById(1, 1, 1)).thenThrow(new BookNotFoundForUserException("Book not found"));
-
-        mockMvc.perform(get("/books/1/notes/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getNoteById_unHappyPath_shouldThrow404NoteNotFoundException() throws Exception {
-        when(noteService.getNoteById(1, 1, 1)).thenThrow(new NoteNotFoundException("Note not found"));
+    void getNoteById_unHappyPath_shouldThrow404ResourceNotFoundException_whenNotNotFound() throws Exception {
+        when(noteService.getNoteById(1, 1, 1))
+                .thenThrow(new ResourceNotFoundException("Note not found"));
 
         mockMvc.perform(get("/books/1/notes/1"))
                 .andExpect(status().isNotFound());
@@ -190,10 +173,10 @@ public class NoteControllerTest {
     }
 
     @Test
-    void updateNote_unHappyPath_shouldThrow404UserNotFoundException() throws Exception {
+    void updateNote_unHappyPath_shouldThrow404ResourceNotFoundException_whenUserNotFound() throws Exception {
         NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("Updated Note", 15);
         when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteUpdateRequestDTO.class)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(patch("/books/1/notes/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -202,10 +185,10 @@ public class NoteControllerTest {
     }
 
     @Test
-    void updateNote_unHappyPath_shouldThrow404BookNotFoundForUserException() throws Exception {
+    void updateNote_unHappyPath_shouldThrow404ResourceNotFoundException() throws Exception {
         NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("Updated Note", 15);
         when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteUpdateRequestDTO.class)))
-                .thenThrow(new BookNotFoundForUserException("Book not found"));
+                .thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(patch("/books/1/notes/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -214,10 +197,10 @@ public class NoteControllerTest {
     }
 
     @Test
-    void updateNote_unHappyPath_shouldThrow404NoteNotFoundException() throws Exception {
+    void updateNote_unHappyPath_shouldThrow404ResourceNotFoundException_whenNoteNotFound() throws Exception {
         NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("Updated Note", 15);
         when(noteService.updateNote(eq(1), eq(1), eq(1), any(NoteUpdateRequestDTO.class)))
-                .thenThrow(new NoteNotFoundException("Note not found"));
+                .thenThrow(new ResourceNotFoundException("Note not found"));
 
         mockMvc.perform(patch("/books/1/notes/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -237,24 +220,8 @@ public class NoteControllerTest {
     }
 
     @Test
-    void deleteNote_unHappyPath_shouldThrow404UserNotFoundException() throws Exception {
-        doThrow(new UserNotFoundException("User not found")).when(noteService).deleteNote(1, 1, 1);
-
-        mockMvc.perform(delete("/books/1/notes/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void deleteNote_unHappyPath_shouldThrow404BookNotFoundForUserException() throws Exception {
-        doThrow(new BookNotFoundForUserException("Book not found")).when(noteService).deleteNote(1, 1, 1);
-
-        mockMvc.perform(delete("/books/1/notes/1"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void deleteNote_unHappyPath_shouldThrow404NoteNotFoundException() throws Exception {
-        doThrow(new NoteNotFoundException("Note not found")).when(noteService).deleteNote(1, 1, 1);
+    void deleteNote_unHappyPath_shouldThrow404ResourceNotFoundException() throws Exception {
+        doThrow(new ResourceNotFoundException("Note not found")).when(noteService).deleteNote(1, 1, 1);
 
         mockMvc.perform(delete("/books/1/notes/1"))
                 .andExpect(status().isNotFound());

@@ -1,17 +1,14 @@
 package com.wpn.personallibrarytracker.service;
 
 import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionRequestDTO;
-import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO;
+import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionDetailsResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.ReadingSession;
-import com.wpn.personallibrarytracker.entity.User;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.InvalidPageNumberException;
-import com.wpn.personallibrarytracker.exceptions.ReadingSessionNotFound;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.projections.ReadingSessionProjection;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.ReadingSessionRepository;
-import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,18 +20,15 @@ import java.util.Optional;
 
 @Service("readingSessionService")
 public class ReadingSessionServiceImpl implements ReadingSessionService{
-    private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final ReadingSessionRepository readingSessionRepository;
     private final Environment environment;
 
     public ReadingSessionServiceImpl(
-            UserRepository userRepository,
             BookRepository bookRepository,
             ReadingSessionRepository readingSessionRepository,
             Environment environment
     ) {
-        this.userRepository = userRepository;
         this.bookRepository = bookRepository;
         this.readingSessionRepository = readingSessionRepository;
         this.environment = environment;
@@ -42,14 +36,12 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
 
     @Override
     @Transactional
-    public ReadingSessionResponseDTO logSession(
+    public ReadingSessionDetailsResponseDTO logSession(
             Integer userId,
             Integer bookId,
             ReadingSessionRequestDTO readingSessionRequestDTO
     ) {
-        // Check if user exists
-        validateUserExists(userId);
-        // Check if book exists
+        // Check if book exists and get it
         Book foundBook = getBookByUser(bookId, userId);
         // Validations
         // If request DTO end session is greater than total page number in the book
@@ -77,30 +69,35 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
         newReadingSession.setSessionDateTime(LocalDateTime.now());
         newReadingSession.setBook(foundBook);
         newReadingSession.setEndSessionPageNumber(readingSessionRequestDTO.endSessionPageNumber());
-        newReadingSession.setPagesReadInSession(pagesRead);
         ReadingSession savedReadingSession = readingSessionRepository.save(newReadingSession);
-        return new ReadingSessionResponseDTO(
+        ReadingSessionProjection loggedReadingSession = getReadingSession(
                 savedReadingSession.getReadingSessionId(),
-                savedReadingSession.getPagesReadInSession(),
-                savedReadingSession.getEndSessionPageNumber(),
-                savedReadingSession.getSessionDateTime()
+                bookId,
+                userId
+        );
+        return new ReadingSessionDetailsResponseDTO(
+                loggedReadingSession.getReadingSessionId(),
+                loggedReadingSession.getPagesReadInSession(),
+                loggedReadingSession.getEndSessionPageNumber(),
+                loggedReadingSession.getSessionDateTime()
         );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReadingSessionResponseDTO> getSessions(
+    public Page<ReadingSessionDetailsResponseDTO> getSessions(
             Integer userId, Integer bookId, Pageable pageable
     ) {
-        // Check if user exists
-        validateUserExists(userId);
-        // Check if book exists
-        validateBookByUserExists(bookId, userId);
+        if(!bookRepository.existsByBookIdAndUserUserId(bookId, userId)) {
+            throw new ResourceNotFoundException(
+                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+            );
+        }
         // Check if reading session exists
-        Page<ReadingSession> readingSessionPage = readingSessionRepository
-                .findByBookBookIdAndBookUserUserId(bookId, userId, pageable);
+        Page<ReadingSessionProjection> readingSessionPage = readingSessionRepository
+                .findSessionsWithComputedPages(bookId, userId, pageable);
         // Send the found reading session mapped to ReadingSessionResponseDTO
-        return readingSessionPage.map(session -> new ReadingSessionResponseDTO(
+        return readingSessionPage.map(session -> new ReadingSessionDetailsResponseDTO(
                 session.getReadingSessionId(),
                 session.getPagesReadInSession(),
                 session.getEndSessionPageNumber(),
@@ -110,21 +107,17 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
 
     @Override
     @Transactional(readOnly = true)
-    public ReadingSessionResponseDTO getSessionById(
+    public ReadingSessionDetailsResponseDTO getSessionById(
             Integer userId, Integer bookId, Integer sessionId
     ) {
-        // Check if user exists
-        validateUserExists(userId);
-        // Check if book exists
-        validateBookByUserExists(bookId,userId);
         // Check if reading session exists
-        ReadingSession foundReadingSession = getReadingSession(
+        ReadingSessionProjection foundReadingSession = getReadingSession(
                 sessionId,
                 bookId,
                 userId
         );
         // Return response DTO for found reading session.
-        return new ReadingSessionResponseDTO(
+        return new ReadingSessionDetailsResponseDTO(
                 foundReadingSession.getReadingSessionId(),
                 foundReadingSession.getPagesReadInSession(),
                 foundReadingSession.getEndSessionPageNumber(),
@@ -134,19 +127,21 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
 
     @Override
     @Transactional
-    public ReadingSessionResponseDTO updateSession(
+    public ReadingSessionDetailsResponseDTO updateSession(
             Integer userId,
             Integer bookId,
             Integer sessionId,
             ReadingSessionRequestDTO readingSessionRequestDTO
     ) {
-        validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
-        ReadingSession foundReadingSession = getReadingSession(
-                sessionId,
-                bookId,
-                userId
-        );
+        ReadingSession foundReadingSession = readingSessionRepository
+                .findByReadingSessionIdAndBookBookIdAndBookUserUserId(
+                        sessionId,
+                        bookId,
+                        userId
+                ).orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                ));
         // Validations
         if(readingSessionRequestDTO.endSessionPageNumber() > foundBook.getTotalPages()) {
             throw new InvalidPageNumberException(
@@ -169,7 +164,6 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
                     environment.getProperty("Service.PAGE_NUMBER_GOING_BACKWARDS")
             );
         }
-        foundReadingSession.setPagesReadInSession(pagesRead);
         // Next session validation
         Optional<ReadingSession> nextSessionOptional = findNextReadingSession(
                 bookId,
@@ -183,21 +177,16 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
                         environment.getProperty("Service.PAGE_NUMBER_GOING_FORWARDS")
                 );
             }
-            nextSession.setPagesReadInSession(
-                    nextSession.getEndSessionPageNumber() - readingSessionRequestDTO.endSessionPageNumber()
-            );
-            readingSessionRepository.save(nextSession);
         }
-        // Updating:
-        foundReadingSession.setEndSessionPageNumber(
-                readingSessionRequestDTO.endSessionPageNumber()
-        );
-        ReadingSession savedReadingSession = readingSessionRepository.save(foundReadingSession);
-        return new ReadingSessionResponseDTO(
-                savedReadingSession.getReadingSessionId(),
-                savedReadingSession.getPagesReadInSession(),
-                savedReadingSession.getEndSessionPageNumber(),
-                savedReadingSession.getSessionDateTime()
+        foundReadingSession.setEndSessionPageNumber(readingSessionRequestDTO.endSessionPageNumber());
+        readingSessionRepository.save(foundReadingSession);
+        ReadingSessionProjection updatedSession = getReadingSession(sessionId, bookId, userId);
+
+        return new ReadingSessionDetailsResponseDTO(
+                updatedSession.getReadingSessionId(),
+                updatedSession.getPagesReadInSession(),
+                updatedSession.getEndSessionPageNumber(),
+                updatedSession.getSessionDateTime()
         );
     }
 
@@ -206,57 +195,19 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     public void deleteSession(
             Integer userId, Integer bookId, Integer sessionId
     ) {
-        validateUserExists(userId);
-        validateBookByUserExists(bookId,userId);
         ReadingSession foundReadingSession = readingSessionRepository
                 .findByReadingSessionIdAndBookBookIdAndBookUserUserId(sessionId, bookId, userId)
-                .orElseThrow(() -> new ReadingSessionNotFound(
-                        environment.getProperty("Service.READING_SESSION_NOT_FOUND")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
-        // Update next session
-        Optional<ReadingSession> nextReadingSessionOptional = findNextReadingSession(
-                bookId,userId,foundReadingSession.getSessionDateTime()
-        );
-        if(nextReadingSessionOptional.isPresent()) {
-            ReadingSession nextReadingSession = nextReadingSessionOptional.get();
-            // Find previous session
-            Optional<ReadingSession> previousReadingSessionOptional = findPreviousReadingSession(
-                    bookId,userId,foundReadingSession.getSessionDateTime()
-            );
-            int recalculatedPagesRead = previousReadingSessionOptional
-                    .map(prev ->
-                            nextReadingSession.getEndSessionPageNumber() -
-                            prev.getEndSessionPageNumber())
-                    .orElse(nextReadingSession.getEndSessionPageNumber());
-            nextReadingSession.setPagesReadInSession(
-                    recalculatedPagesRead
-            );
-            readingSessionRepository.save(nextReadingSession);
-        }
         readingSessionRepository.delete(foundReadingSession);
     }
 
     // Utility methods
-    void validateUserExists(Integer userId) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-    };
-
-    void validateBookByUserExists(Integer bookId, Integer userId) {
-        if(!bookRepository.existsByBookIdAndUserUserId(bookId, userId)) {
-            throw new BookNotFoundForUserException(
-                    environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
-            );
-        };
-    };
-
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
-            .orElseThrow(() -> new BookNotFoundForUserException(
-                    environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
             ));
     };
 
@@ -282,11 +233,11 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
                 );
     };
 
-    ReadingSession getReadingSession(Integer sessionId, Integer bookId, Integer userId) {
+    ReadingSessionProjection getReadingSession(Integer sessionId, Integer bookId, Integer userId) {
         return readingSessionRepository
-                .findByReadingSessionIdAndBookBookIdAndBookUserUserId(sessionId, bookId, userId)
-                .orElseThrow(() -> new ReadingSessionNotFound(
-                        environment.getProperty("Service.READING_SESSION_NOT_FOUND")
+                .findSessionWithComputedPages(sessionId, bookId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
     }
 }

@@ -6,8 +6,7 @@ import com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionRespo
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
 import com.wpn.personallibrarytracker.entity.User;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.springframework.core.env.Environment;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service(value = "bookService")
@@ -48,10 +46,6 @@ public class BookServiceImpl implements BookService {
         newBook.setCoverUrl(bookRequestDTO.coverUrl());
         newBook.setUser(foundUser);
         Book savedBook = bookRepository.save(newBook);
-        if(foundUser.getBooks() == null) {
-            foundUser.setBooks(new ArrayList<>());
-        }
-        foundUser.getBooks().add(savedBook);
         return new BookResponseDTO(
                 savedBook.getBookId(),
                 savedBook.getTitle(),
@@ -62,6 +56,7 @@ public class BookServiceImpl implements BookService {
         );
     }
 
+    @Transactional
     @Override
     public BookResponseDTO addBookFromSearch(
             Integer userId,
@@ -76,10 +71,6 @@ public class BookServiceImpl implements BookService {
         newBook.setCoverUrl(bookFromSearchRequestDTO.coverUrl());
         newBook.setUser(foundUser);
         Book savedBook = bookRepository.save(newBook);
-        if(foundUser.getBooks() == null) {
-            foundUser.setBooks(new ArrayList<>());
-        }
-        foundUser.getBooks().add(savedBook);
         return new BookResponseDTO(
                 savedBook.getBookId(),
                 savedBook.getTitle(),
@@ -90,14 +81,19 @@ public class BookServiceImpl implements BookService {
         );
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Page<BookResponseDTO> getBooksByUser(
             Integer userId,
             Pageable pageable
     ) {
-        User foundUser = getUser(userId);
+        if(!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException(
+                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+            );
+        }
         Page<Book> bookList = bookRepository.findByUserUserId(
-                foundUser.getUserId(),
+                userId,
                 pageable
         );
         return bookList
@@ -116,12 +112,10 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public BookDetailsResponseDTO getBookDetails(Integer userId, Integer bookId) {
-        validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
-        List<ReadingSessionResponseDTO> readingSessionResponseDTOList = foundBook.getReadingSessions()
+        List<ReadingSessionResponseDTO> readingSessionDetailsResponseDTOList = foundBook.getReadingSessions()
                 .stream().map(readingSession -> new ReadingSessionResponseDTO(
                         readingSession.getReadingSessionId(),
-                        readingSession.getPagesReadInSession(),
                         readingSession.getEndSessionPageNumber(),
                         readingSession.getSessionDateTime()
                 )).toList();
@@ -148,7 +142,7 @@ public class BookServiceImpl implements BookService {
                 foundBook.getTotalPages(),
                 foundBook.getIsbn(),
                 foundBook.getCoverUrl(),
-                readingSessionResponseDTOList,
+                readingSessionDetailsResponseDTOList,
                 noteResponseDTOList,
                 reviewResponseDTO
         );
@@ -157,7 +151,6 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public BookResponseDTO updateBook(Integer userId, Integer bookId, BookUpdateRequestDTO bookUpdateRequestDTO) {
-        validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
         if(bookUpdateRequestDTO.title() != null) {
             foundBook.setTitle(bookUpdateRequestDTO.title());
@@ -188,29 +181,20 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void deleteBook(Integer userId, Integer bookId) {
-        validateUserExists(userId);
         Book foundBook = getBookByUser(bookId, userId);
         bookRepository.delete(foundBook);
     }
     // Utility functions
-    void validateUserExists(Integer userId) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-    };
-
     User getUser(Integer userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new UserNotFoundException(environment.getProperty("Service.USER_NOT_FOUND"))
+                () -> new ResourceNotFoundException(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
         );
     };
 
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
-                .orElseThrow(() -> new BookNotFoundForUserException(
-                        environment.getProperty("Service.BOOK_NOT_FOUND_FOR_USER")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
     };
 }

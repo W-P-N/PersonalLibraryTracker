@@ -14,7 +14,6 @@ public class ReadingSession {
     private Integer readingSessionId;
     private LocalDateTime sessionDateTime;
     private Integer endSessionPageNumber;
-    private Integer pagesReadInSession;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id")
     private Book book;

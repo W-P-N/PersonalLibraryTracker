@@ -12,8 +12,8 @@ import org.springframework.core.env.Environment;
 
 import com.wpn.personallibrarytracker.dto.statsDTOs.StatsResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
-import com.wpn.personallibrarytracker.entity.ReadingSession;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.projections.ReadingSessionStatsProjection;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +27,17 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class StatsServiceImplTest {
+    private ReadingSessionStatsProjection mockStatsProjection(Integer id, Integer pagesRead, Integer endPage, java.time.LocalDateTime dateTime, Integer bookId, Integer bookTotalPages) {
+        ReadingSessionStatsProjection projection = org.mockito.Mockito.mock(ReadingSessionStatsProjection.class);
+        org.mockito.Mockito.lenient().when(projection.getReadingSessionId()).thenReturn(id);
+        org.mockito.Mockito.lenient().when(projection.getPagesReadInSession()).thenReturn(pagesRead);
+        org.mockito.Mockito.lenient().when(projection.getEndSessionPageNumber()).thenReturn(endPage);
+        org.mockito.Mockito.lenient().when(projection.getSessionDateTime()).thenReturn(dateTime);
+        org.mockito.Mockito.lenient().when(projection.getBookId()).thenReturn(bookId);
+        org.mockito.Mockito.lenient().when(projection.getBookTotalPages()).thenReturn(bookTotalPages);
+        return projection;
+    }
+
     @Mock
     UserRepository userRepository;
     @Mock
@@ -57,33 +68,16 @@ public class StatsServiceImplTest {
 
         LocalDate today = LocalDate.now();
 
-        ReadingSession session1 = new ReadingSession();
-        session1.setReadingSessionId(1);
-        session1.setBook(book1);
-        session1.setSessionDateTime(LocalDateTime.of(today.minusDays(1), LocalTime.NOON));
-        session1.setEndSessionPageNumber(50);
-        session1.setPagesReadInSession(30);
+        ReadingSessionStatsProjection session1 = mockStatsProjection(1, 30, 50, LocalDateTime.of(today.minusDays(1), LocalTime.NOON), book1.getBookId(), book1.getTotalPages());
+        ReadingSessionStatsProjection session2 = mockStatsProjection(2, 20, 20, LocalDateTime.of(today.minusDays(2), LocalTime.NOON), book1.getBookId(), book1.getTotalPages());
+        ReadingSessionStatsProjection session3 = mockStatsProjection(3, 50, 200, LocalDateTime.of(today.minusDays(3), LocalTime.NOON), book2.getBookId(), book2.getTotalPages());
 
-        ReadingSession session2 = new ReadingSession();
-        session2.setReadingSessionId(2);
-        session2.setBook(book1);
-        session2.setSessionDateTime(LocalDateTime.of(today.minusDays(2), LocalTime.NOON));
-        session2.setEndSessionPageNumber(20);
-        session2.setPagesReadInSession(20);
-
-        ReadingSession session3 = new ReadingSession();
-        session3.setReadingSessionId(3);
-        session3.setBook(book2);
-        session3.setSessionDateTime(LocalDateTime.of(today.minusDays(3), LocalTime.NOON));
-        session3.setEndSessionPageNumber(200);
-        session3.setPagesReadInSession(50);
-
-        List<ReadingSession> sessions = new ArrayList<>();
+        List<ReadingSessionStatsProjection> sessions = new ArrayList<>();
         sessions.add(session1);
         sessions.add(session2);
         sessions.add(session3);
 
-        when(readingSessionRepository.findAllByBookUserUserIdOrderBySessionDateTimeDesc(userId)).thenReturn(sessions);
+        when(readingSessionRepository.findAllSessionsWithComputedPagesByUser(userId)).thenReturn(sessions);
         when(reviewRepository.findAverageRatingByUserId(userId)).thenReturn(4.5);
 
         // Act
@@ -112,7 +106,7 @@ public class StatsServiceImplTest {
         Integer userId = 2;
         when(userRepository.existsById(userId)).thenReturn(true);
         when(bookRepository.countByUserUserId(userId)).thenReturn(0L);
-        when(readingSessionRepository.findAllByBookUserUserIdOrderBySessionDateTimeDesc(userId)).thenReturn(Collections.emptyList());
+        when(readingSessionRepository.findAllSessionsWithComputedPagesByUser(userId)).thenReturn(Collections.emptyList());
         when(reviewRepository.findAverageRatingByUserId(userId)).thenReturn(null);
 
         // Act
@@ -135,10 +129,13 @@ public class StatsServiceImplTest {
         // Arrange
         Integer userId = 999;
         when(userRepository.existsById(userId)).thenReturn(false);
-        when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
+        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
 
         // Act & Assert
-        UserNotFoundException exception = assertThrows(UserNotFoundException.class, () -> statsService.getStats(userId));
-        assertEquals("User not found", exception.getMessage());
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class, () -> statsService.getStats(userId)
+        );
+        assertEquals("The requested resource was not found", exception.getMessage());
     }
 }

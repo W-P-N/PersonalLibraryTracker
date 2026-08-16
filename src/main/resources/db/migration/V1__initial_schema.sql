@@ -36,7 +36,7 @@ CREATE TABLE reviews (
                          review_id  INT AUTO_INCREMENT PRIMARY KEY,
                          content    VARCHAR(255) NOT NULL,
                          rating     INT NOT NULL,
-                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                          book_id    INT NOT NULL UNIQUE,
                          CONSTRAINT fk_review_book
                              FOREIGN KEY (book_id) REFERENCES books(book_id)
@@ -51,7 +51,7 @@ CREATE TABLE reviews (
 -- ============================================================
 CREATE TABLE reading_sessions (
                                   reading_session_id      INT AUTO_INCREMENT PRIMARY KEY,
-                                  session_date_time       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                  session_date_time       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                   end_session_page_number INT NOT NULL,
                                   pages_read_in_session   INT,
                                   book_id                 INT NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE reading_sessions (
 CREATE TABLE notes (
                        note_id     INT AUTO_INCREMENT PRIMARY KEY,
                        content     VARCHAR(255) NOT NULL,
-                       created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        book_id     INT NOT NULL,
                        page_number INT,
                        CONSTRAINT fk_note_book
@@ -83,7 +83,7 @@ CREATE TABLE refresh_tokens (
                                 refresh_token_id INT AUTO_INCREMENT PRIMARY KEY,
                                 token             VARCHAR(255) NOT NULL UNIQUE,
                                 user_id           INT NOT NULL,
-                                expiry_date       DATETIME NOT NULL,
+                                expiry_date       TIMESTAMP NOT NULL,
                                 CONSTRAINT fk_refresh_token_user
                                     FOREIGN KEY (user_id) REFERENCES users(user_id)
                                         ON DELETE CASCADE

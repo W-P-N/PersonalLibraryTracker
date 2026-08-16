@@ -1,6 +1,7 @@
 package com.wpn.personallibrarytracker.service;
 
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookDetailsResponseDTO;
+import com.wpn.personallibrarytracker.dto.bookDTOs.BookFromSearchRequestDTO;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookRequestDTO;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookResponseDTO;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookUpdateRequestDTO;
@@ -9,28 +10,25 @@ import com.wpn.personallibrarytracker.entity.Note;
 import com.wpn.personallibrarytracker.entity.ReadingSession;
 import com.wpn.personallibrarytracker.entity.Review;
 import com.wpn.personallibrarytracker.entity.User;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.env.Environment;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import com.wpn.personallibrarytracker.dto.bookDTOs.BookFromSearchRequestDTO;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -51,7 +49,6 @@ public class BookServiceImplTest {
 
     @Test
     public void addBook_shouldSaveBookAndAssociateWithUser_whenUserExists() {
-        // Arrange
         Integer userId = 1;
         BookRequestDTO requestDTO = new BookRequestDTO(
                 "The Hobbit",
@@ -65,7 +62,6 @@ public class BookServiceImplTest {
         user.setUserId(userId);
         user.setUserName("john_doe");
         user.setEmail("john@example.com");
-        user.setBooks(new ArrayList<>());
 
         Book savedBook = new Book();
         savedBook.setBookId(101);
@@ -78,10 +74,8 @@ public class BookServiceImplTest {
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         Mockito.when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
 
-        // Act
         BookResponseDTO response = bookService.addBook(userId, requestDTO);
 
-        // Assert
         Assertions.assertNotNull(response);
         Assertions.assertEquals(101, response.bookId());
         Assertions.assertEquals("The Hobbit", response.title());
@@ -90,41 +84,38 @@ public class BookServiceImplTest {
         Assertions.assertEquals("https://example.com/cover.jpg", response.coverUrl());
         Assertions.assertEquals(310, response.totalPages());
 
-        Assertions.assertEquals(1, user.getBooks().size());
-        Assertions.assertEquals(savedBook, user.getBooks().get(0));
+        ArgumentCaptor<Book> bookCaptor = ArgumentCaptor.forClass(Book.class);
+        Mockito.verify(bookRepository).save(bookCaptor.capture());
+        Assertions.assertEquals(user, bookCaptor.getValue().getUser());
     }
 
     @Test
-    public void addBook_shouldThrowUserNotFoundException_whenUserDoesNotExist() {
-        // Arrange
+    public void addBook_shouldThrowResourceNotFoundException_whenUserDoesNotExist() {
         Integer userId = 999;
         BookRequestDTO requestDTO = new BookRequestDTO(
                 "The Hobbit",
                 "J.R.R. Tolkien",
                 310,
-                "https://example.com/cover.jpg",
-                "9780007525492"
+                "9780007525492",
+                "https://example.com/cover.jpg"
         );
 
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
 
-        // Act & Assert
-        UserNotFoundException exception = Assertions.assertThrows(
-                UserNotFoundException.class,
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
                 () -> bookService.addBook(userId, requestDTO)
         );
 
-        Assertions.assertEquals("User not found", exception.getMessage());
+        Assertions.assertEquals("The requested resource was not found", exception.getMessage());
         Mockito.verify(bookRepository, Mockito.never()).save(any(Book.class));
     }
 
     @Test
     public void getBooksByUser_shouldReturnBookResponseDTOList_whenUserExistsAndHasBooks() {
-        // Arrange
         Integer userId = 1;
-        User user = new User();
-        user.setUserId(userId);
 
         Book book = new Book();
         book.setBookId(101);
@@ -134,14 +125,12 @@ public class BookServiceImplTest {
         book.setCoverUrl("https://example.com/cover.jpg");
         book.setTotalPages(310);
 
-        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         Pageable pageable = PageRequest.of(0, 5);
+        Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.findByUserUserId(userId, pageable)).thenReturn(new PageImpl<>(List.of(book)));
 
-        // Act
         Page<BookResponseDTO> response = bookService.getBooksByUser(userId, pageable);
 
-        // Assert
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getContent().size());
         Assertions.assertEquals(101, response.getContent().get(0).bookId());
@@ -150,45 +139,38 @@ public class BookServiceImplTest {
 
     @Test
     public void getBooksByUser_shouldReturnEmptyList_whenUserExistsAndHasNoBooks() {
-        // Arrange
         Integer userId = 1;
-        User user = new User();
-        user.setUserId(userId);
-
-        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         Pageable pageable = PageRequest.of(0, 5);
+
+        Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.findByUserUserId(userId, pageable)).thenReturn(Page.empty());
 
-        // Act
         Page<BookResponseDTO> response = bookService.getBooksByUser(userId, pageable);
 
-        // Assert
         Assertions.assertNotNull(response);
         Assertions.assertTrue(response.isEmpty());
     }
 
     @Test
-    public void getBooksByUser_shouldThrowUserNotFoundException_whenUserDoesNotExist() {
-        // Arrange
+    public void getBooksByUser_shouldThrowResourceNotFoundException_whenUserDoesNotExist() {
         Integer userId = 999;
-
-        Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.USER_NOT_FOUND")).thenReturn("User not found");
-
-        // Act & Assert
         Pageable pageable = PageRequest.of(0, 5);
-        UserNotFoundException exception = Assertions.assertThrows(
-                UserNotFoundException.class,
+
+        Mockito.when(userRepository.existsById(userId)).thenReturn(false);
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
+
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
                 () -> bookService.getBooksByUser(userId, pageable)
         );
 
-        Assertions.assertEquals("User not found", exception.getMessage());
+        Assertions.assertEquals("The requested resource was not found", exception.getMessage());
         Mockito.verify(bookRepository, Mockito.never()).findByUserUserId(any(), any());
     }
 
     @Test
     public void addBookFromSearch_shouldSaveBookAndAssociateWithUser_whenUserExists() {
-        // Arrange
         Integer userId = 1;
         BookFromSearchRequestDTO requestDTO = new BookFromSearchRequestDTO(
                 "The Hobbit",
@@ -202,7 +184,6 @@ public class BookServiceImplTest {
         user.setUserId(userId);
         user.setUserName("john_doe");
         user.setEmail("john@example.com");
-        user.setBooks(new ArrayList<>());
 
         Book savedBook = new Book();
         savedBook.setBookId(101);
@@ -215,10 +196,8 @@ public class BookServiceImplTest {
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         Mockito.when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
 
-        // Act
         BookResponseDTO response = bookService.addBookFromSearch(userId, requestDTO);
 
-        // Assert
         Assertions.assertNotNull(response);
         Assertions.assertEquals(101, response.bookId());
         Assertions.assertEquals("The Hobbit", response.title());
@@ -227,18 +206,15 @@ public class BookServiceImplTest {
         Assertions.assertEquals("https://example.com/cover.jpg", response.coverUrl());
         Assertions.assertEquals(310, response.totalPages());
 
-        Assertions.assertEquals(1, user.getBooks().size());
-        Assertions.assertEquals(savedBook, user.getBooks().get(0));
+        ArgumentCaptor<Book> bookCaptor = ArgumentCaptor.forClass(Book.class);
+        Mockito.verify(bookRepository).save(bookCaptor.capture());
+        Assertions.assertEquals(user, bookCaptor.getValue().getUser());
     }
 
     @Test
     public void getBookDetails_shouldReturnBookDetailsResponseDTO_whenUserIdAndBookIdAreValid() {
-        // Arrange
         Integer userId = 1;
         Integer bookId = 101;
-
-        User user = new User();
-        user.setUserId(userId);
 
         Book book = new Book();
         book.setBookId(bookId);
@@ -250,7 +226,6 @@ public class BookServiceImplTest {
 
         ReadingSession session = new ReadingSession();
         session.setReadingSessionId(1);
-        session.setPagesReadInSession(50);
         session.setEndSessionPageNumber(100);
         session.setSessionDateTime(java.time.LocalDateTime.of(2026, 6, 30, 10, 0));
         book.setReadingSessions(List.of(session));
@@ -266,15 +241,13 @@ public class BookServiceImplTest {
         review.setReviewId(1);
         review.setContent("Amazing");
         review.setRating(5);
+        review.setCreatedAt(java.time.LocalDateTime.of(2026, 6, 30, 10, 0));
         book.setReview(review);
 
-        Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId)).thenReturn(Optional.of(book));
 
-        // Act
         BookDetailsResponseDTO response = bookService.getBookDetails(userId, bookId);
 
-        // Assert
         Assertions.assertNotNull(response);
         Assertions.assertEquals(bookId, response.bookId());
         Assertions.assertEquals("The Hobbit", response.title());
@@ -284,46 +257,29 @@ public class BookServiceImplTest {
         Assertions.assertEquals(1, response.notes().size());
         Assertions.assertNotNull(response.review());
         Assertions.assertEquals(5, response.review().rating());
+        Mockito.verify(userRepository, Mockito.never()).existsById(any());
     }
 
     @Test
-    public void getBookDetails_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
-        // Arrange
-        Integer userId = 999;
-        Integer bookId = 101;
-
-        Mockito.when(userRepository.existsById(userId)).thenReturn(false);
-
-        // Act & Assert
-        Assertions.assertThrows(
-                UserNotFoundException.class,
-                () -> bookService.getBookDetails(userId, bookId)
-        );
-        Mockito.verify(bookRepository, org.mockito.Mockito.never()).findByBookIdAndUserUserId(org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt());
-    }
-
-    @Test
-    public void getBookDetails_shouldThrowBookNotFoundForUserException_whenUserIdIsValidAndBookIdIsInvalid() {
-        // Arrange
+    public void getBookDetails_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         Integer userId = 1;
         Integer bookId = 999;
 
-        User user = new User();
-        user.setUserId(userId);
-
-        Mockito.when(userRepository.existsById(userId)).thenReturn(true);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId)).thenReturn(Optional.empty());
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
 
-        // Act & Assert
-        Assertions.assertThrows(
-                BookNotFoundForUserException.class,
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
                 () -> bookService.getBookDetails(userId, bookId)
         );
+
+        Assertions.assertEquals("The requested resource was not found", exception.getMessage());
+        Mockito.verify(userRepository, Mockito.never()).existsById(any());
     }
 
     @Test
     public void updateBook_shouldReturnBookResponseDTO() {
-        // Arrange
         Integer userId = 12;
         Integer bookId = 14;
 
@@ -335,8 +291,6 @@ public class BookServiceImplTest {
         foundBook.setIsbn("12334");
         foundBook.setTotalPages(341);
 
-        Mockito.when(userRepository.existsById(userId))
-                .thenReturn(true);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId))
                 .thenReturn(Optional.of(foundBook));
 
@@ -348,22 +302,20 @@ public class BookServiceImplTest {
                 "https://test12"
         );
 
-        // Act
         BookResponseDTO bookResponseDTO = bookService.updateBook(userId, bookId, bookUpdateRequestDTO);
 
-        // Assert
-        Assertions.assertEquals(bookResponseDTO.title(), bookUpdateRequestDTO.title());
-        Assertions.assertEquals(bookResponseDTO.author(), bookUpdateRequestDTO.author());
-        Assertions.assertEquals(bookResponseDTO.totalPages(), bookUpdateRequestDTO.totalPages());
-        Assertions.assertEquals(bookResponseDTO.isbn(), bookUpdateRequestDTO.isbn());
-        Assertions.assertEquals(bookResponseDTO.coverUrl(), bookUpdateRequestDTO.coverUrl());
+        Assertions.assertEquals(bookUpdateRequestDTO.title(), bookResponseDTO.title());
+        Assertions.assertEquals(bookUpdateRequestDTO.author(), bookResponseDTO.author());
+        Assertions.assertEquals(bookUpdateRequestDTO.totalPages(), bookResponseDTO.totalPages());
+        Assertions.assertEquals(bookUpdateRequestDTO.isbn(), bookResponseDTO.isbn());
+        Assertions.assertEquals(bookUpdateRequestDTO.coverUrl(), bookResponseDTO.coverUrl());
 
         Mockito.verify(bookRepository, Mockito.times(1)).save(Mockito.any(Book.class));
+        Mockito.verify(userRepository, Mockito.never()).existsById(any());
     }
 
     @Test
-    public void updateBook_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
-        // Arrange
+    void updateBook_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         Integer mockUserId = 12;
         Integer mockBookId = 23;
         BookUpdateRequestDTO bookUpdateRequestDTO = new BookUpdateRequestDTO(
@@ -373,136 +325,59 @@ public class BookServiceImplTest {
                 "12353",
                 "https://test12"
         );
-        // Act
-        Mockito.when(userRepository.existsById(mockUserId))
-                .thenThrow(UserNotFoundException.class);
-        // Assert
-        Assertions.assertThrows(
-                UserNotFoundException.class,
-                () -> bookService.updateBook(mockUserId, mockBookId, bookUpdateRequestDTO)
-        );
 
-        Mockito.verify(userRepository, Mockito.times(1))
-                .existsById(Mockito.anyInt());
-    }
-
-    @Test
-    void updateBook_shouldThrowBookNotFoundForTheUserException_whenBookIdIsInvalid() {
-        // Arrange
-        Integer mockUserId = 12;
-        Integer mockBookId = 23;
-        BookUpdateRequestDTO bookUpdateRequestDTO = new BookUpdateRequestDTO(
-                "TestBook1",
-                "Test Author 1",
-                234,
-                "12353",
-                "https://test12"
-        );
-        // Act
-        Mockito.when(userRepository.existsById(mockUserId))
-                        .thenReturn(true);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
                 .thenReturn(Optional.empty());
-        // Assert
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
+
         Assertions.assertThrows(
-                BookNotFoundForUserException.class,
+                ResourceNotFoundException.class,
                 () -> bookService.updateBook(mockUserId, mockBookId, bookUpdateRequestDTO)
         );
 
-        Mockito.verify(userRepository, Mockito.times(1))
-                .existsById(Mockito.anyInt());
         Mockito.verify(bookRepository, Mockito.times(1))
-                .findByBookIdAndUserUserId(
-                        Mockito.anyInt(),
-                        Mockito.anyInt()
-                );
+                .findByBookIdAndUserUserId(mockBookId, mockUserId);
+        Mockito.verify(userRepository, Mockito.never()).existsById(any());
     }
 
     @Test
-    void deleteBook_shouldDeleteBook_whenUserAndBookExist() {
-        // Arrange
+    void deleteBook_shouldDeleteBook_whenBookExistsForUser() {
         Integer mockUserId = 12;
         Integer mockBookId = 23;
 
         Book mockBook = new Book();
         mockBook.setBookId(mockBookId);
 
-        Mockito.when(userRepository.existsById(mockUserId))
-                .thenReturn(true);
-
         Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
                 .thenReturn(Optional.of(mockBook));
 
-        // Act
         bookService.deleteBook(mockUserId, mockBookId);
 
-        // Assert
-        Mockito.verify(userRepository, Mockito.times(1))
-                .existsById(Mockito.anyInt());
-
         Mockito.verify(bookRepository, Mockito.times(1))
-                .findByBookIdAndUserUserId(
-                        Mockito.anyInt(),
-                        Mockito.anyInt()
-                );
-
-        Mockito.verify(bookRepository, Mockito.times(1))
-                .delete(mockBook);
+                .findByBookIdAndUserUserId(mockBookId, mockUserId);
+        Mockito.verify(bookRepository, Mockito.times(1)).delete(mockBook);
+        Mockito.verify(userRepository, Mockito.never()).existsById(any());
     }
 
     @Test
-    void deleteBook_shouldThrowUserNotFoundException_whenUserIdIsInvalid() {
-        // Arrange
+    void deleteBook_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         Integer mockUserId = 12;
         Integer mockBookId = 23;
-
-        Mockito.when(userRepository.existsById(mockUserId))
-                .thenReturn(false);
-
-        // Assert
-        Assertions.assertThrows(
-                UserNotFoundException.class,
-                () -> bookService.deleteBook(mockUserId, mockBookId)
-        );
-
-        Mockito.verify(userRepository, Mockito.times(1))
-                .existsById(Mockito.anyInt());
-
-        Mockito.verify(bookRepository, Mockito.never())
-                .findByBookIdAndUserUserId(Mockito.anyInt(), Mockito.anyInt());
-
-        Mockito.verify(bookRepository, Mockito.never())
-                .delete(Mockito.any(Book.class));
-    }
-
-    @Test
-    void deleteBook_shouldThrowBookNotFoundForUserException_whenBookIdIsInvalid() {
-        // Arrange
-        Integer mockUserId = 12;
-        Integer mockBookId = 23;
-
-        Mockito.when(userRepository.existsById(mockUserId))
-                .thenReturn(true);
 
         Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
                 .thenReturn(Optional.empty());
+        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                .thenReturn("The requested resource was not found");
 
-        // Assert
         Assertions.assertThrows(
-                BookNotFoundForUserException.class,
+                ResourceNotFoundException.class,
                 () -> bookService.deleteBook(mockUserId, mockBookId)
         );
 
-        Mockito.verify(userRepository, Mockito.times(1))
-                .existsById(Mockito.anyInt());
-
         Mockito.verify(bookRepository, Mockito.times(1))
-                .findByBookIdAndUserUserId(
-                        Mockito.anyInt(),
-                        Mockito.anyInt()
-                );
-
-        Mockito.verify(bookRepository, Mockito.never())
-                .delete(Mockito.any(Book.class));
+                .findByBookIdAndUserUserId(mockBookId, mockUserId);
+        Mockito.verify(bookRepository, Mockito.never()).delete(Mockito.any(Book.class));
+        Mockito.verify(userRepository, Mockito.never()).existsById(any());
     }
 }

@@ -3,10 +3,8 @@ package com.wpn.personallibrarytracker.controller;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewCreateRequestDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewResponseDTO;
 import com.wpn.personallibrarytracker.dto.reviewDTOs.ReviewUpdateRequestDTO;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.ReviewAlreadyExistsException;
-import com.wpn.personallibrarytracker.exceptions.ReviewNotFoundForTheBookException;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.JwtService;
 import com.wpn.personallibrarytracker.service.ReviewService;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -80,7 +78,7 @@ public class ReviewControllerTest {
     void addReview_unHappyPath_shouldReturn404_whenUserNotFound() throws Exception {
         ReviewCreateRequestDTO request = new ReviewCreateRequestDTO("Great", 5);
         when(reviewService.addReview(eq(1), eq(1), any(ReviewCreateRequestDTO.class)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(post("/books/1/review")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +90,7 @@ public class ReviewControllerTest {
     void addReview_unHappyPath_shouldReturn404_whenBookNotFoundForUser() throws Exception {
         ReviewCreateRequestDTO request = new ReviewCreateRequestDTO("Great", 5);
         when(reviewService.addReview(eq(1), eq(1), any(ReviewCreateRequestDTO.class)))
-                .thenThrow(new BookNotFoundForUserException("Book not found"));
+                .thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(post("/books/1/review")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -126,7 +124,7 @@ public class ReviewControllerTest {
 
     @Test
     void getReview_unHappyPath_shouldReturn404_whenUserNotFound() throws Exception {
-        when(reviewService.getReview(1, 1)).thenThrow(new UserNotFoundException("User not found"));
+        when(reviewService.getReview(1, 1)).thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(get("/books/1/review"))
                 .andExpect(status().isNotFound());
@@ -134,7 +132,7 @@ public class ReviewControllerTest {
 
     @Test
     void getReview_unHappyPath_shouldReturn404_whenBookNotFoundForUser() throws Exception {
-        when(reviewService.getReview(1, 1)).thenThrow(new BookNotFoundForUserException("Book not found"));
+        when(reviewService.getReview(1, 1)).thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(get("/books/1/review"))
                 .andExpect(status().isNotFound());
@@ -142,7 +140,7 @@ public class ReviewControllerTest {
 
     @Test
     void getReview_unHappyPath_shouldReturn404_whenReviewNotFoundForTheBook() throws Exception {
-        when(reviewService.getReview(1, 1)).thenThrow(new ReviewNotFoundForTheBookException("Review not found"));
+        when(reviewService.getReview(1, 1)).thenThrow(new ResourceNotFoundException("Review not found"));
 
         mockMvc.perform(get("/books/1/review"))
                 .andExpect(status().isNotFound());
@@ -168,7 +166,7 @@ public class ReviewControllerTest {
     void updateReview_unHappyPath_shouldReturn404_whenUserNotFound() throws Exception {
         ReviewUpdateRequestDTO request = new ReviewUpdateRequestDTO("Updated", 3);
         when(reviewService.updateReview(eq(1), eq(1), any(ReviewUpdateRequestDTO.class)))
-                .thenThrow(new UserNotFoundException("User not found"));
+                .thenThrow(new ResourceNotFoundException("User not found"));
 
         mockMvc.perform(patch("/books/1/review")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -180,7 +178,7 @@ public class ReviewControllerTest {
     void updateReview_unHappyPath_shouldReturn404_whenBookNotFoundForUser() throws Exception {
         ReviewUpdateRequestDTO request = new ReviewUpdateRequestDTO("Updated", 3);
         when(reviewService.updateReview(eq(1), eq(1), any(ReviewUpdateRequestDTO.class)))
-                .thenThrow(new BookNotFoundForUserException("Book not found"));
+                .thenThrow(new ResourceNotFoundException("Book not found"));
 
         mockMvc.perform(patch("/books/1/review")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -192,7 +190,7 @@ public class ReviewControllerTest {
     void updateReview_unHappyPath_shouldReturn404_whenReviewNotFoundForTheBook() throws Exception {
         ReviewUpdateRequestDTO request = new ReviewUpdateRequestDTO("Updated", 3);
         when(reviewService.updateReview(eq(1), eq(1), any(ReviewUpdateRequestDTO.class)))
-                .thenThrow(new ReviewNotFoundForTheBookException("Review not found"));
+                .thenThrow(new ResourceNotFoundException("Review not found"));
 
         mockMvc.perform(patch("/books/1/review")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -211,7 +209,7 @@ public class ReviewControllerTest {
 
     @Test
     void deleteReview_unHappyPath_shouldReturn404_whenUserNotFound() throws Exception {
-        doThrow(new UserNotFoundException("User not found")).when(reviewService).deleteReview(1, 1);
+        doThrow(new ResourceNotFoundException("User not found")).when(reviewService).deleteReview(1, 1);
 
         mockMvc.perform(delete("/books/1/review"))
                 .andExpect(status().isNotFound());
@@ -219,7 +217,7 @@ public class ReviewControllerTest {
 
     @Test
     void deleteReview_unHappyPath_shouldReturn404_whenBookNotFoundForUser() throws Exception {
-        doThrow(new BookNotFoundForUserException("Book not found")).when(reviewService).deleteReview(1, 1);
+        doThrow(new ResourceNotFoundException("Book not found")).when(reviewService).deleteReview(1, 1);
 
         mockMvc.perform(delete("/books/1/review"))
                 .andExpect(status().isNotFound());
@@ -227,7 +225,7 @@ public class ReviewControllerTest {
 
     @Test
     void deleteReview_unHappyPath_shouldReturn404_whenReviewNotFoundForTheBook() throws Exception {
-        doThrow(new ReviewNotFoundForTheBookException("Review not found")).when(reviewService).deleteReview(1, 1);
+        doThrow(new ResourceNotFoundException("Review not found")).when(reviewService).deleteReview(1, 1);
 
         mockMvc.perform(delete("/books/1/review"))
                 .andExpect(status().isNotFound());

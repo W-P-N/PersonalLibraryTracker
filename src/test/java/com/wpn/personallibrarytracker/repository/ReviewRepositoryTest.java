@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
-import org.springframework.core.env.Environment;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,133 +16,108 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 public class ReviewRepositoryTest {
     @Autowired
-    private Environment environment;
-    @Autowired
     private ReviewRepository reviewRepository;
     @Autowired
     private TestEntityManager testEntityManager;
 
     @Test
     void existsByBookBookId_happyPath_shouldReturnTrue() {
-        // Arrange
-        User foundUser = new User();
-        testEntityManager.persist(foundUser);
-        Book foundBook = new Book();
-        foundBook.setUser(foundUser);
-        testEntityManager.persist(foundBook);
-        Review foundReview = new Review();
-        foundReview.setBook(foundBook);
-        testEntityManager.persist(foundReview);
+        User foundUser = createUser("testuser", "testuser@mail.com", "password");
+        Book foundBook = createBook("Title", "Author", 100, foundUser);
+        Review foundReview = createReview("Great book", 4, foundBook);
 
-        // Act
-        boolean exists = reviewRepository
-                .existsByBookBookId(foundBook.getBookId());
+        boolean exists = reviewRepository.existsByBookBookId(foundBook.getBookId());
 
-        // Assert
         assertTrue(exists);
     }
 
     @Test
     void existsByBookBookId_unHappyPath_shouldReturnFalse() {
-        // Arrange
-        User foundUser = new User();
-        testEntityManager.persist(foundUser);
-        Book foundBook = new Book();
-        foundBook.setUser(foundUser);
-        testEntityManager.persist(foundBook);
+        User foundUser = createUser("testuser2", "testuser2@mail.com", "password");
+        Book foundBook = createBook("Title", "Author", 100, foundUser);
 
-        // Act
-        boolean exists = reviewRepository
-                .existsByBookBookId(foundBook.getBookId());
+        boolean exists = reviewRepository.existsByBookBookId(foundBook.getBookId());
 
-        // Assert
         assertFalse(exists);
     }
 
     @Test
     void findByBookBookIdAndBookUserUserId_happyPath_shouldReturnOptionalReview() {
-        // Arrange
-        User foundUser = new User();
-        testEntityManager.persist(foundUser);
-        Book foundBook = new Book();
-        foundBook.setUser(foundUser);
-        testEntityManager.persist(foundBook);
-        Review foundReview = new Review();
-        foundReview.setBook(foundBook);
-        testEntityManager.persist(foundReview);
+        User foundUser = createUser("testuser3", "testuser3@mail.com", "password");
+        Book foundBook = createBook("Title", "Author", 100, foundUser);
+        Review foundReview = createReview("Great book", 4, foundBook);
 
-        // Act
         Optional<Review> foundReviewOptional = reviewRepository
                 .findByBookBookIdAndBookUserUserId(
                         foundBook.getBookId(),
                         foundUser.getUserId()
                 );
 
-        // Assert
-        assertNotNull(foundReviewOptional);
-        Review foundReviewContent = foundReviewOptional.get();
-        assertEquals(foundReview.getReviewId(), foundReviewContent.getReviewId());
+        assertTrue(foundReviewOptional.isPresent());
+        assertEquals(foundReview.getReviewId(), foundReviewOptional.get().getReviewId());
     }
 
     @Test
     void findByBookBookIdAndBookUserUserId_unHappyPath_shouldReturnEmptyOptionalReview() {
-        // Arrange
-        User foundUser = new User();
-        testEntityManager.persist(foundUser);
-        Book foundBook = new Book();
-        foundBook.setUser(foundUser);
-        testEntityManager.persist(foundBook);
+        User foundUser = createUser("testuser4", "testuser4@mail.com", "password");
+        Book foundBook = createBook("Title", "Author", 100, foundUser);
 
-        // Act
         Optional<Review> foundReviewOptional = reviewRepository
                 .findByBookBookIdAndBookUserUserId(
                         foundBook.getBookId(),
                         foundUser.getUserId()
                 );
 
-        // Assert
         assertEquals(Optional.empty(), foundReviewOptional);
     }
 
     @Test
     void findAverageRatingByUserId_happyPath_shouldReturnAverageRating() {
-        // Arrange
-        User foundUser = new User();
-        testEntityManager.persist(foundUser);
-        
-        Book foundBook1 = new Book();
-        foundBook1.setUser(foundUser);
-        testEntityManager.persist(foundBook1);
-        Review foundReview1 = new Review();
-        foundReview1.setBook(foundBook1);
-        foundReview1.setRating(4);
-        testEntityManager.persist(foundReview1);
+        User foundUser = createUser("testuser5", "testuser5@mail.com", "password");
 
-        Book foundBook2 = new Book();
-        foundBook2.setUser(foundUser);
-        testEntityManager.persist(foundBook2);
-        Review foundReview2 = new Review();
-        foundReview2.setBook(foundBook2);
-        foundReview2.setRating(5);
-        testEntityManager.persist(foundReview2);
+        Book foundBook1 = createBook("Title 1", "Author 1", 100, foundUser);
+        createReview("Great book", 4, foundBook1);
 
-        // Act
+        Book foundBook2 = createBook("Title 2", "Author 2", 200, foundUser);
+        createReview("Excellent book", 5, foundBook2);
+
         Double averageRating = reviewRepository.findAverageRatingByUserId(foundUser.getUserId());
 
-        // Assert
         assertEquals(4.5, averageRating);
     }
 
     @Test
     void findAverageRatingByUserId_unHappyPath_shouldReturnNull() {
-        // Arrange
-        User foundUser = new User();
-        testEntityManager.persist(foundUser);
+        User foundUser = createUser("testuser6", "testuser6@mail.com", "password");
 
-        // Act
         Double averageRating = reviewRepository.findAverageRatingByUserId(foundUser.getUserId());
 
-        // Assert
         assertNull(averageRating);
+    }
+
+    private User createUser(String userName, String email, String password) {
+        User user = new User();
+        user.setUserName(userName);
+        user.setEmail(email);
+        user.setPassword(password);
+        return testEntityManager.persist(user);
+    }
+
+    private Book createBook(String title, String author, Integer totalPages, User user) {
+        Book book = new Book();
+        book.setTitle(title);
+        book.setAuthor(author);
+        book.setTotalPages(totalPages);
+        book.setUser(user);
+        return testEntityManager.persist(book);
+    }
+
+    private Review createReview(String content, Integer rating, Book book) {
+        Review review = new Review();
+        review.setContent(content);
+        review.setRating(rating);
+        review.setCreatedAt(LocalDateTime.now());
+        review.setBook(book);
+        return testEntityManager.persist(review);
     }
 }

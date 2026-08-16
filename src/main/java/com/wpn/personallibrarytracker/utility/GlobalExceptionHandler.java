@@ -26,7 +26,6 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception exception) {
-        System.out.println(exception.getMessage());
         ErrorResponse errorResponse = new ErrorResponse(
                 environment.getProperty("EXCEPTIONS.SERVER_ERROR_EXCEPTION"),
                 HttpStatus.INTERNAL_SERVER_ERROR.value()
@@ -60,12 +59,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
-    @ExceptionHandler({
-            UserNotFoundException.class,
-            BookNotFoundForUserException.class,
-            NoteNotFoundException.class,
-            ReviewNotFoundForTheBookException.class
-    })
+    @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundExceptions(Exception exception) {
         ErrorResponse errorResponse = new ErrorResponse(
                 exception.getMessage(),

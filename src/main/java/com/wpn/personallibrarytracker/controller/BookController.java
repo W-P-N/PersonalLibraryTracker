@@ -1,7 +1,7 @@
 package com.wpn.personallibrarytracker.controller;
 
 import com.wpn.personallibrarytracker.dto.bookDTOs.*;
-import com.wpn.personallibrarytracker.exceptions.BookNotFoundForUserException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
 import com.wpn.personallibrarytracker.service.BookService;
 import jakarta.validation.Valid;
@@ -89,7 +89,7 @@ public class BookController {
             Integer userId,
             @PathVariable
             Integer bookId
-    ) throws UserNotFoundException, BookNotFoundForUserException {
+    ) throws UserNotFoundException, ResourceNotFoundException {
         bookService.deleteBook(userId, bookId);
         return ResponseEntity.noContent().build();
     };

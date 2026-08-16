@@ -1,9 +1,8 @@
 package com.wpn.personallibrarytracker.service;
 
 import com.wpn.personallibrarytracker.dto.statsDTOs.StatsResponseDTO;
-import com.wpn.personallibrarytracker.entity.Book;
-import com.wpn.personallibrarytracker.entity.ReadingSession;
-import com.wpn.personallibrarytracker.exceptions.UserNotFoundException;
+import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
+import com.wpn.personallibrarytracker.projections.ReadingSessionStatsProjection;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.ReadingSessionRepository;
 import com.wpn.personallibrarytracker.repository.ReviewRepository;
@@ -43,49 +42,51 @@ public class StatsServiceImpl implements StatsService{
     @Override
     @Transactional(readOnly = true)
     public StatsResponseDTO getStats(Integer userId) {
-        validateUserExists(userId);
+        if(!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException(
+                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+            );
+        }
         Long totalBooks = bookRepository.countByUserUserId(userId);
         // Get list of reading sessions of the user
-        List<ReadingSession> readingSessionList = readingSessionRepository
-                .findAllByBookUserUserIdOrderBySessionDateTimeDesc(userId);
+        List<ReadingSessionStatsProjection> readingSessionList = readingSessionRepository
+                .findAllSessionsWithComputedPagesByUser(userId);
         // Group reading sessions by book
-        Map<Book, List<ReadingSession>> sessionsByBook = readingSessionList.stream()
-                .collect(Collectors.groupingBy(ReadingSession::getBook));
+        Map<Integer, List<ReadingSessionStatsProjection>> sessionsByBook = readingSessionList.stream()
+                .collect(Collectors.groupingBy(ReadingSessionStatsProjection::getBookId));
         // Books not started = totalBooks - sessionsByBook.size()
         Long booksNotStarted = totalBooks - sessionsByBook.size();
         // booksReading and booksFinished
-        Long booksFinished = sessionsByBook.entrySet().stream()
-                .map(entry -> {
-                    Book book = entry.getKey();
-                    ReadingSession latestReadingSession = entry.getValue().get(0);
-                    return latestReadingSession.getEndSessionPageNumber() >= book.getTotalPages();
+        Long booksFinished = sessionsByBook.values().stream()
+                .map(readingSessionStatsProjections -> {
+                    ReadingSessionStatsProjection latestReadingSession = readingSessionStatsProjections.get(0);
+                    return latestReadingSession.getEndSessionPageNumber() >= latestReadingSession.getBookTotalPages();
                 })
                 .filter(isFinished -> isFinished)
                 .count();
-        Long booksReading = sessionsByBook.entrySet().stream()
-                .map(entry -> {
-                    Book book = entry.getKey();
-                    ReadingSession latestReadingSession = entry.getValue().get(0);
-                    return latestReadingSession.getEndSessionPageNumber() < book.getTotalPages();
+        Long booksReading = sessionsByBook.values().stream()
+                .map(readingSessionStatsProjections -> {
+                    ReadingSessionStatsProjection latestReadingSession = readingSessionStatsProjections.get(0);
+                    return latestReadingSession.getEndSessionPageNumber() < latestReadingSession.getBookTotalPages();
                 })
                 .filter(isFinished -> isFinished)
                 .count();
         // totalPagesRead
         Long totalPagesRead = (long) readingSessionList.stream()
-                .mapToInt(ReadingSession::getPagesReadInSession)
+                .mapToInt(ReadingSessionStatsProjection::getPagesReadInSession)
                 .sum();
         // pagesReadPerDay
         Map<LocalDate, Long> pagesReadPerDay = readingSessionList.stream()
                 .collect(Collectors.groupingBy(
                         session -> session.getSessionDateTime().toLocalDate(),
-                        Collectors.summingLong(ReadingSession::getPagesReadInSession)
+                        Collectors.summingLong(ReadingSessionStatsProjection::getPagesReadInSession)
                 ));
         // Average Rating
         Double avgRating = reviewRepository.findAverageRatingByUserId(userId);
         // Streak calculation
         long streak = 0;
         LocalDate previousDate = LocalDate.now();
-        for(ReadingSession readingSession: readingSessionList) {
+        for(ReadingSessionStatsProjection readingSession: readingSessionList) {
             LocalDate currentDate = readingSession.getSessionDateTime().toLocalDate();
             long daysBetween = ChronoUnit.DAYS.between(currentDate, previousDate);
             if(daysBetween == 0L) {
@@ -109,13 +110,4 @@ public class StatsServiceImpl implements StatsService{
 
         );
     }
-
-    // Utility methods
-    void validateUserExists(Integer userId) {
-        if(!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(
-                    environment.getProperty("Service.USER_NOT_FOUND")
-            );
-        };
-    };
 }
