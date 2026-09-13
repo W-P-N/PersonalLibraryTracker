@@ -38,21 +38,13 @@ public class BookServiceImpl implements BookService {
     public BookResponseDTO addBook(Integer userId, BookRequestDTO bookRequestDTO) {
         // Check if book already exists - business decision pending
         User foundUser = getUser(userId);
-        Book newBook = new Book();
-        newBook.setTitle(bookRequestDTO.title());
-        newBook.setAuthor(bookRequestDTO.author());
-        newBook.setIsbn(bookRequestDTO.isbn());
-        newBook.setTotalPages(bookRequestDTO.totalPages());
-        newBook.setCoverUrl(bookRequestDTO.coverUrl());
-        newBook.setUser(foundUser);
-        Book savedBook = bookRepository.save(newBook);
-        return new BookResponseDTO(
-                savedBook.getBookId(),
-                savedBook.getTitle(),
-                savedBook.getAuthor(),
-                savedBook.getIsbn(),
-                savedBook.getCoverUrl(),
-                savedBook.getTotalPages()
+        return createAndSaveBook(
+                foundUser,
+                bookRequestDTO.title(),
+                bookRequestDTO.author(),
+                bookRequestDTO.totalPages(),
+                bookRequestDTO.isbn(),
+                bookRequestDTO.coverUrl()
         );
     }
 
@@ -63,21 +55,13 @@ public class BookServiceImpl implements BookService {
             BookFromSearchRequestDTO bookFromSearchRequestDTO
     ) {
         User foundUser = getUser(userId);
-        Book newBook = new Book();
-        newBook.setTitle(bookFromSearchRequestDTO.title());
-        newBook.setAuthor(bookFromSearchRequestDTO.author());
-        newBook.setIsbn(bookFromSearchRequestDTO.isbn());
-        newBook.setTotalPages(bookFromSearchRequestDTO.totalPages());
-        newBook.setCoverUrl(bookFromSearchRequestDTO.coverUrl());
-        newBook.setUser(foundUser);
-        Book savedBook = bookRepository.save(newBook);
-        return new BookResponseDTO(
-                savedBook.getBookId(),
-                savedBook.getTitle(),
-                savedBook.getAuthor(),
-                savedBook.getIsbn(),
-                savedBook.getCoverUrl(),
-                savedBook.getTotalPages()
+        return createAndSaveBook(
+                foundUser,
+                bookFromSearchRequestDTO.title(),
+                bookFromSearchRequestDTO.author(),
+                bookFromSearchRequestDTO.totalPages(),
+                bookFromSearchRequestDTO.isbn(),
+                bookFromSearchRequestDTO.coverUrl()
         );
     }
 
@@ -181,4 +165,25 @@ public class BookServiceImpl implements BookService {
                         environment.getProperty("Service.RESOURCE_NOT_FOUND")
                 ));
     };
+    private BookResponseDTO createAndSaveBook(
+            User user,
+            String title,
+            String author,
+            Integer totalPages,
+            String isbn,
+            String coverUrl
+    ) {
+        Book newBook = new Book();
+        newBook.setTitle(title);
+        newBook.setAuthor(author);
+        newBook.setTotalPages(totalPages);
+        newBook.setIsbn(isbn);
+        newBook.setCoverUrl(coverUrl);
+        newBook.setUser(user);
+        Book savedBook = bookRepository.save(newBook);
+        return new BookResponseDTO(
+                savedBook.getBookId(), savedBook.getTitle(), savedBook.getAuthor(),
+                savedBook.getIsbn(), savedBook.getCoverUrl(), savedBook.getTotalPages()
+        );
+    }
 }
