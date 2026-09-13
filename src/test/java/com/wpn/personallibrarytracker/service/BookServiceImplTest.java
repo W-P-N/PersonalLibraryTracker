@@ -253,8 +253,6 @@ public class BookServiceImplTest {
         Assertions.assertEquals("The Hobbit", response.title());
         Assertions.assertEquals("J.R.R. Tolkien", response.author());
         Assertions.assertEquals(310, response.totalPages());
-        Assertions.assertEquals(1, response.readingSessionList().size());
-        Assertions.assertEquals(1, response.notes().size());
         Assertions.assertNotNull(response.review());
         Assertions.assertEquals(5, response.review().rating());
         Mockito.verify(userRepository, Mockito.never()).existsById(any());

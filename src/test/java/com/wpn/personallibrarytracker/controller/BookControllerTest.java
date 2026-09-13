@@ -243,8 +243,6 @@ public class BookControllerTest {
                 310,
                 "9780007525492",
                 "https://example.com/cover.jpg",
-                List.of(readingSession),
-                List.of(note),
                 review
         );
 
@@ -258,8 +256,6 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.title").value("The Hobbit"))
                 .andExpect(jsonPath("$.author").value("J.R.R. Tolkien"))
                 .andExpect(jsonPath("$.totalPages").value(310))
-                .andExpect(jsonPath("$.readingSessionList.size()").value(1))
-                .andExpect(jsonPath("$.notes.size()").value(1))
                 .andExpect(jsonPath("$.review.rating").value(1));
     }
 

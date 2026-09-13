@@ -12,8 +12,6 @@ public record BookDetailsResponseDTO(
         Integer totalPages,
         String isbn,
         String coverUrl,
-        List<com.wpn.personallibrarytracker.dto.readingSessionDTOs.ReadingSessionResponseDTO> readingSessionList,
-        List<NoteResponseDTO> notes,
         ReviewResponseDTO review
 ) {
 }

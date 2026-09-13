@@ -13,11 +13,13 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 @DataJpaTest
+@ActiveProfiles("test")
 public class NoteRepositoryTest {
     @Autowired
     private Environment environment;
@@ -60,7 +62,7 @@ public class NoteRepositoryTest {
     }
 
     @Test
-    void findByBookBookIdAndBookUserUserId_shouldReturnEmptyPageWhenOutOfRange() {
+    void    findByBookBookIdAndBookUserUserId_shouldReturnEmptyPageWhenOutOfRange() {
         // Arrange
         // // User
         User newUser = createUser("test", "test@mail.com", "test@123");

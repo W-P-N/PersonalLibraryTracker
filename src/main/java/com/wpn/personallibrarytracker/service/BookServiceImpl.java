@@ -113,20 +113,6 @@ public class BookServiceImpl implements BookService {
     @Transactional(readOnly = true)
     public BookDetailsResponseDTO getBookDetails(Integer userId, Integer bookId) {
         Book foundBook = getBookByUser(bookId, userId);
-        List<ReadingSessionResponseDTO> readingSessionDetailsResponseDTOList = foundBook.getReadingSessions()
-                .stream().map(readingSession -> new ReadingSessionResponseDTO(
-                        readingSession.getReadingSessionId(),
-                        readingSession.getEndSessionPageNumber(),
-                        readingSession.getSessionDateTime()
-                )).toList();
-        List<NoteResponseDTO> noteResponseDTOList = foundBook.getNotes()
-                .stream()
-                .map(note -> new NoteResponseDTO(
-                        note.getNoteId(),
-                        note.getCreatedAt(),
-                        note.getPageNumber()
-                ))
-                .toList();
         ReviewResponseDTO reviewResponseDTO = foundBook.getReview() != null ?
                 new ReviewResponseDTO(
                         foundBook.getReview().getContent(),
@@ -142,8 +128,6 @@ public class BookServiceImpl implements BookService {
                 foundBook.getTotalPages(),
                 foundBook.getIsbn(),
                 foundBook.getCoverUrl(),
-                readingSessionDetailsResponseDTOList,
-                noteResponseDTOList,
                 reviewResponseDTO
         );
     }
