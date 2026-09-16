@@ -16,7 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.mockito.ArgumentMatchers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +37,7 @@ public class NoteServiceImplTest {
     @Mock
     NoteRepository noteRepository;
     @Mock
-    Environment environment;
+    MessageSource messageSource;
 
     @InjectMocks
     NoteServiceImpl noteService;
@@ -70,7 +71,7 @@ public class NoteServiceImplTest {
     @Test
     void createNote_unHappyPath_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         when(bookRepository.findByBookIdAndUserUserId(1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         NoteRequestDTO request = new NoteRequestDTO("Test Content", 10);
@@ -86,7 +87,7 @@ public class NoteServiceImplTest {
         book.setTotalPages(100);
 
         when(bookRepository.findByBookIdAndUserUserId(1, 1)).thenReturn(Optional.of(book));
-        when(environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.PAGE_NUMBER_EXCEEDS_BOOK"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("Page number exceeds book");
 
         Assertions.assertThrows(InvalidPageNumberException.class, () -> noteService.createNote(1, 1, request));
@@ -116,7 +117,7 @@ public class NoteServiceImplTest {
     @Test
     void getNotes_unHappyPath_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         when(bookRepository.existsByBookIdAndUserUserId(1, 1)).thenReturn(false);
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Pageable pageable = PageRequest.of(0, 10);
@@ -144,7 +145,7 @@ public class NoteServiceImplTest {
     @Test
     void getNoteById_unHappyPath_shouldThrowResourceNotFoundException_whenNoteNotFound() {
         when(noteRepository.findByNoteIdAndBookBookIdAndBookUserUserId(100, 1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class, () -> noteService.getNoteById(100, 1, 1));
@@ -180,7 +181,7 @@ public class NoteServiceImplTest {
     @Test
     void updateNote_unHappyPath_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         when(bookRepository.findByBookIdAndUserUserId(1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("New Content", 10);
@@ -197,7 +198,7 @@ public class NoteServiceImplTest {
         when(bookRepository.findByBookIdAndUserUserId(1, 1)).thenReturn(Optional.of(book));
         when(noteRepository.findByNoteIdAndBookBookIdAndBookUserUserId(100, 1, 1))
                 .thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         NoteUpdateRequestDTO request = new NoteUpdateRequestDTO("New Content", 10);
@@ -226,7 +227,7 @@ public class NoteServiceImplTest {
     @Test
     void deleteNote_unHappyPath_shouldThrowResourceNotFoundException_whenNoteNotFound() {
         when(noteRepository.findByNoteIdAndBookBookIdAndBookUserUserId(100, 1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class, () -> noteService.deleteNote(100, 1, 1));

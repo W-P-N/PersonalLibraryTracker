@@ -13,7 +13,8 @@ import com.wpn.personallibrarytracker.exceptions.UserAlreadyExistsException;
 import com.wpn.personallibrarytracker.repository.RefreshTokenRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
 import com.wpn.personallibrarytracker.utility.TokenHasher;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,7 @@ import java.util.UUID;
 
 @Service("authService")
 public class AuthServiceImpl implements AuthService {
-    private final Environment environment;
+    private final MessageSource messageSource;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
@@ -31,16 +32,16 @@ public class AuthServiceImpl implements AuthService {
     private final TokenHasher tokenHasher;
 
     public AuthServiceImpl(
+            MessageSource messageSource,
             UserRepository userRepository,
             RefreshTokenRepository refreshTokenRepository,
-            Environment environment,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             TokenHasher tokenHasher
     ) {
+        this.messageSource = messageSource;
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.environment = environment;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.tokenHasher = tokenHasher;
@@ -53,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
     ) {
         if(userRepository.findByEmail(registerRequestDTO.email()).isPresent()) {
             throw new UserAlreadyExistsException(
-                    environment.getProperty("Service.USER_ALREADY_EXISTS")
+                    messageSource.getMessage("Service.USER_ALREADY_EXISTS", null, LocaleContextHolder.getLocale())
             );
         }
         String hashedPassword = passwordEncoder.encode(registerRequestDTO.password());
@@ -77,13 +78,13 @@ public class AuthServiceImpl implements AuthService {
         User foundUser = userRepository.findByEmail(loginRequestDTO.email())
                 .orElseThrow(
                         () -> new InvalidCredentialsException(
-                                environment.getProperty("Service.INVALID_CREDENTIALS")
+                                messageSource.getMessage("Service.INVALID_CREDENTIALS", null, LocaleContextHolder.getLocale())
                         )
                 );
         boolean matches = passwordEncoder.matches(loginRequestDTO.password(), foundUser.getPassword());
         if(!matches) {
             throw new InvalidCredentialsException(
-                    environment.getProperty("Service.INVALID_CREDENTIALS")
+                    messageSource.getMessage("Service.INVALID_CREDENTIALS", null, LocaleContextHolder.getLocale())
             );
         }
         String token = jwtService.generateToken(foundUser.getUserId());
@@ -113,12 +114,12 @@ public class AuthServiceImpl implements AuthService {
                         refreshTokenRequestDTO.refreshToken()
                 )
         ).orElseThrow(() -> new InvalidRefreshTokenException(
-                environment.getProperty("Service.INVALID_REFRESH_TOKEN")
+                messageSource.getMessage("Service.INVALID_REFRESH_TOKEN", null, LocaleContextHolder.getLocale())
         ));
         if(foundRefreshToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(foundRefreshToken);
             throw new InvalidRefreshTokenException(
-                    environment.getProperty("Service.INVALID_REFRESH_TOKEN")
+                    messageSource.getMessage("Service.INVALID_REFRESH_TOKEN", null, LocaleContextHolder.getLocale())
             );
         }
         User tokenUser = foundRefreshToken.getUser();

@@ -9,7 +9,8 @@ import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,16 +21,16 @@ import java.util.List;
 @Service(value = "bookService")
 public class BookServiceImpl implements BookService {
     private final UserRepository userRepository;
-    private final Environment environment;
+    private final MessageSource messageSource;
     private final BookRepository bookRepository;
 
     public BookServiceImpl(
             UserRepository userRepository,
-            Environment environment,
+            MessageSource messageSource,
             BookRepository bookRepository
     ) {
         this.userRepository = userRepository;
-        this.environment = environment;
+        this.messageSource = messageSource;
         this.bookRepository = bookRepository;
     }
 
@@ -73,7 +74,7 @@ public class BookServiceImpl implements BookService {
     ) {
         if(!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException(
-                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                    messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
             );
         }
         Page<Book> bookList = bookRepository.findByUserUserId(
@@ -155,14 +156,14 @@ public class BookServiceImpl implements BookService {
     // Utility functions
     User getUser(Integer userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                () -> new ResourceNotFoundException(messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale()))
         );
     };
 
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
     };
     private BookResponseDTO createAndSaveBook(

@@ -9,7 +9,8 @@ import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.ReviewAlreadyExistsException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.ReviewRepository;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,16 +20,16 @@ import java.time.LocalDateTime;
 public class ReviewServiceImpl implements ReviewService{
     private final ReviewRepository reviewRepository;
     private final BookRepository bookRepository;
-    private  final Environment environment;
+    private  final MessageSource messageSource;
 
     public ReviewServiceImpl(
             ReviewRepository reviewRepository,
             BookRepository bookRepository,
-            Environment environment
+            MessageSource messageSource
     ) {
         this.reviewRepository = reviewRepository;
         this.bookRepository = bookRepository;
-        this.environment = environment;
+        this.messageSource = messageSource;
     }
 
     @Override
@@ -69,7 +70,7 @@ public class ReviewServiceImpl implements ReviewService{
                 .findByBookBookIdAndBookUserUserId(bookId, userId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException(
-                                environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                                messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                         )
                 );
         // Return DTO
@@ -91,7 +92,7 @@ public class ReviewServiceImpl implements ReviewService{
         Review foundReview = reviewRepository.findByBookBookIdAndBookUserUserId(bookId, userId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException(
-                                environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                                messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                         )
                 );
         // Update Review
@@ -122,7 +123,7 @@ public class ReviewServiceImpl implements ReviewService{
         Review foundReview = reviewRepository.findByBookBookIdAndBookUserUserId(bookId, userId)
                 .orElseThrow(
                         () -> new ResourceNotFoundException(
-                                environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                                messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                         )
                 );
         // Delete Review
@@ -133,7 +134,7 @@ public class ReviewServiceImpl implements ReviewService{
     void validateReviewNotAlreadyExists(Integer bookId) {
         if(reviewRepository.existsByBookBookId(bookId)) {
             throw new ReviewAlreadyExistsException(
-                    environment.getProperty("Service.REVIEW_ALREADY_EXISTS")
+                    messageSource.getMessage("Service.REVIEW_ALREADY_EXISTS", null, LocaleContextHolder.getLocale())
             );
         }
     }
@@ -141,7 +142,7 @@ public class ReviewServiceImpl implements ReviewService{
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
     };
 }

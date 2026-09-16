@@ -2,7 +2,8 @@ package com.wpn.personallibrarytracker.utility;
 
 import com.wpn.personallibrarytracker.exceptions.*;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,23 +12,21 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    private final Environment environment;
+    private final MessageSource messageSource;
 
     public GlobalExceptionHandler(
-            Environment environment
+            MessageSource messageSource
     ) {
-        this.environment = environment;
+        this.messageSource = messageSource;
     }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception exception) {
         ErrorResponse errorResponse = new ErrorResponse(
-                environment.getProperty("EXCEPTIONS.SERVER_ERROR_EXCEPTION"),
+                messageSource.getMessage("EXCEPTIONS.SERVER_ERROR_EXCEPTION", null, LocaleContextHolder.getLocale()),
                 HttpStatus.INTERNAL_SERVER_ERROR.value()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -71,7 +70,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handlerDbException(DataIntegrityViolationException exception) {
         ErrorResponse errorResponse = new ErrorResponse(
-                environment.getProperty("EXCEPTIONS.CONFLICT_DATABASE_EXCEPTION"),
+                messageSource.getMessage("EXCEPTIONS.CONFLICT_DATABASE_EXCEPTION", null, LocaleContextHolder.getLocale()),
                 HttpStatus.CONFLICT.value()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
@@ -80,7 +79,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleInvalidHttpRequests(HttpMessageNotReadableException exception) {
         ErrorResponse errorResponse = new ErrorResponse(
-                environment.getProperty("EXCEPTIONS.MALFORMED_HTTP_REQUEST_EXCEPTION"),
+                messageSource.getMessage("EXCEPTIONS.MALFORMED_HTTP_REQUEST_EXCEPTION", null, LocaleContextHolder.getLocale()),
                 HttpStatus.BAD_REQUEST.value()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -91,7 +90,7 @@ public class GlobalExceptionHandler {
             InvalidCredentialsException exception
     ) {
         ErrorResponse errorResponse = new ErrorResponse(
-                environment.getProperty("EXCEPTIONS.INVALID_CREDENTIALS"),
+                messageSource.getMessage("EXCEPTIONS.INVALID_CREDENTIALS", null, LocaleContextHolder.getLocale()),
                 HttpStatus.UNAUTHORIZED.value()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
@@ -102,7 +101,7 @@ public class GlobalExceptionHandler {
             InvalidRefreshTokenException exception
     ) {
         ErrorResponse errorResponse = new ErrorResponse(
-                environment.getProperty("EXCEPTIONS.INVALID_REFRESH_TOKEN"),
+                messageSource.getMessage("EXCEPTIONS.INVALID_REFRESH_TOKEN", null, LocaleContextHolder.getLocale()),
                 HttpStatus.UNAUTHORIZED.value()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);

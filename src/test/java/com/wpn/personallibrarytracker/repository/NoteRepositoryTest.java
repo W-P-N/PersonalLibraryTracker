@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,7 +22,7 @@ import java.util.Optional;
 @ActiveProfiles("test")
 public class NoteRepositoryTest {
     @Autowired
-    private Environment environment;
+    private MessageSource messageSource;
 
     @Autowired
     private NoteRepository noteRepository;
@@ -103,7 +103,7 @@ public class NoteRepositoryTest {
                 newUser.getUserId()
         ).orElseThrow(
                 () -> new NoteNotFoundException(
-                        environment.getProperty("Service.NOTE_NOT_FOUND")
+                        messageSource.getMessage("Service.NOTE_NOT_FOUND", null, org.springframework.context.i18n.LocaleContextHolder.getLocale())
                 )
         );
         // Assert and Verify

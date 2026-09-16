@@ -12,7 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.mockito.ArgumentMatchers;
 
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public class UserServiceImplTest {
     @InjectMocks
     UserServiceImpl userService;
     @Mock
-    Environment environment;
+    MessageSource messageSource;
 
     @Test
     void getUserById_shouldReturnUserResponseDTO_whenUserIdIsFound() {
@@ -50,7 +51,7 @@ public class UserServiceImplTest {
     void getUserById_shouldThrowResourceNotFoundException_whenUserIdIsNotFound() {
         Mockito.when(userRepository.findById(12345))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.getUser(12345));
@@ -89,7 +90,7 @@ public class UserServiceImplTest {
     void updateUserDetailsById_shouldThrowResourceNotFoundException_whenUserIdIsNotFound() {
         Mockito.when(userRepository.findById(123))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class, () -> {
@@ -118,7 +119,7 @@ public class UserServiceImplTest {
     void deleteUserById_shouldThrowResourceNotFoundException_whenUserIdIsNotFound() {
         Mockito.when(userRepository.findById(12345))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(12345));

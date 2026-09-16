@@ -9,7 +9,8 @@ import com.wpn.personallibrarytracker.exceptions.InvalidPageNumberException;
 import com.wpn.personallibrarytracker.projections.ReadingSessionProjection;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.ReadingSessionRepository;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,16 +23,16 @@ import java.util.Optional;
 public class ReadingSessionServiceImpl implements ReadingSessionService{
     private final BookRepository bookRepository;
     private final ReadingSessionRepository readingSessionRepository;
-    private final Environment environment;
+    private final MessageSource messageSource;
 
     public ReadingSessionServiceImpl(
             BookRepository bookRepository,
             ReadingSessionRepository readingSessionRepository,
-            Environment environment
+            MessageSource messageSource
     ) {
         this.bookRepository = bookRepository;
         this.readingSessionRepository = readingSessionRepository;
-        this.environment = environment;
+        this.messageSource = messageSource;
     }
 
     @Override
@@ -47,7 +48,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
         // If request DTO end session is greater than total page number in the book
         if(readingSessionRequestDTO.endSessionPageNumber() > foundBook.getTotalPages()) {
             throw new InvalidPageNumberException(
-                    environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK")
+                    messageSource.getMessage("Service.PAGE_NUMBER_EXCEEDS_BOOK", null, LocaleContextHolder.getLocale())
             );
         }
         // Previous session validation -
@@ -61,7 +62,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
                 .orElse(readingSessionRequestDTO.endSessionPageNumber());
         if(pagesRead < 1) {
             throw new InvalidPageNumberException(
-                    environment.getProperty("Service.PAGE_NUMBER_GOING_BACKWARDS")
+                    messageSource.getMessage("Service.PAGE_NUMBER_GOING_BACKWARDS", null, LocaleContextHolder.getLocale())
             );
         }
         // Adding new session
@@ -90,7 +91,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     ) {
         if(!bookRepository.existsByBookIdAndUserUserId(bookId, userId)) {
             throw new ResourceNotFoundException(
-                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                    messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
             );
         }
         // Check if reading session exists
@@ -140,12 +141,12 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
                         bookId,
                         userId
                 ).orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
         // Validations
         if(readingSessionRequestDTO.endSessionPageNumber() > foundBook.getTotalPages()) {
             throw new InvalidPageNumberException(
-                    environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK")
+                    messageSource.getMessage("Service.PAGE_NUMBER_EXCEEDS_BOOK", null, LocaleContextHolder.getLocale())
             );
         }
         // Previous session validation
@@ -161,7 +162,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
                 .orElse(readingSessionRequestDTO.endSessionPageNumber());
         if(pagesRead < 1) {
             throw new InvalidPageNumberException(
-                    environment.getProperty("Service.PAGE_NUMBER_GOING_BACKWARDS")
+                    messageSource.getMessage("Service.PAGE_NUMBER_GOING_BACKWARDS", null, LocaleContextHolder.getLocale())
             );
         }
         // Next session validation
@@ -174,7 +175,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
             ReadingSession nextSession = nextSessionOptional.get();
             if(readingSessionRequestDTO.endSessionPageNumber() > nextSession.getEndSessionPageNumber()) {
                 throw new InvalidPageNumberException(
-                        environment.getProperty("Service.PAGE_NUMBER_GOING_FORWARDS")
+                        messageSource.getMessage("Service.PAGE_NUMBER_GOING_FORWARDS", null, LocaleContextHolder.getLocale())
                 );
             }
         }
@@ -198,7 +199,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
         ReadingSession foundReadingSession = readingSessionRepository
                 .findByReadingSessionIdAndBookBookIdAndBookUserUserId(sessionId, bookId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
         readingSessionRepository.delete(foundReadingSession);
     }
@@ -207,7 +208,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
             .orElseThrow(() -> new ResourceNotFoundException(
-                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                    messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
             ));
     };
 
@@ -237,7 +238,7 @@ public class ReadingSessionServiceImpl implements ReadingSessionService{
         return readingSessionRepository
                 .findSessionWithComputedPages(sessionId, bookId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
     }
 }

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.wpn.personallibrarytracker.dto.bookDTOs.BookSearchResponseDTO;
 import com.wpn.personallibrarytracker.exceptions.UnableToSearchBookException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +19,16 @@ import java.util.stream.Collectors;
 
 @Service(value = "bookSearchService")
 public class BookSearchServiceImpl implements BookSearchService {
+    private final MessageSource messageSource;
     private final RestTemplate restTemplate;
     private final Environment environment;
 
     BookSearchServiceImpl(
+            MessageSource messageSource,
             RestTemplate restTemplate,
             Environment environment
     ) {
+        this.messageSource = messageSource;
         this.restTemplate = restTemplate;
         this.environment = environment;
     }
@@ -41,7 +46,7 @@ public class BookSearchServiceImpl implements BookSearchService {
             response = restTemplate.getForObject(url, GoogleBooksResponse.class);
         } catch (Exception e) {
             throw new UnableToSearchBookException(
-                    environment.getProperty("Service.UNABLE_TO_SEARCH_BOOK")
+                    messageSource.getMessage("Service.UNABLE_TO_SEARCH_BOOK", null, LocaleContextHolder.getLocale())
             );
         }
         if (response == null || response.items() == null) {
@@ -66,7 +71,7 @@ public class BookSearchServiceImpl implements BookSearchService {
             response = restTemplate.getForObject(url, GoogleBooksResponse.class);
         } catch (Exception e) {
             throw new UnableToSearchBookException(
-                    environment.getProperty("Service.UNABLE_TO_SEARCH_BOOK")
+                    messageSource.getMessage("Service.UNABLE_TO_SEARCH_BOOK", null, LocaleContextHolder.getLocale())
             );
         }
         if (response != null && response.items() != null && !response.items().isEmpty()) {

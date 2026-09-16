@@ -6,6 +6,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 src/site/*
+*.py
 
 ### STS ###
 .apt_generated

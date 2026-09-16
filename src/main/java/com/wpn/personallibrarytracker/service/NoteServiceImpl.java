@@ -10,7 +10,8 @@ import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.exceptions.InvalidPageNumberException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.NoteRepository;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,18 +21,18 @@ import java.time.LocalDateTime;
 
 @Service("noteService")
 public class NoteServiceImpl implements NoteService{
+    private final MessageSource messageSource;
     private final BookRepository bookRepository;
     private final NoteRepository noteRepository;
-    private final Environment environment;
 
     public NoteServiceImpl(
+            MessageSource messageSource,
             BookRepository bookRepository,
-            NoteRepository noteRepository,
-            Environment environment
+            NoteRepository noteRepository
     ) {
+        this.messageSource = messageSource;
         this.bookRepository = bookRepository;
         this.noteRepository = noteRepository;
-        this.environment = environment;
     }
 
     @Override
@@ -47,7 +48,7 @@ public class NoteServiceImpl implements NoteService{
                 noteRequestDTO.pageNumber() > foundBook.getTotalPages()
         ) {
             throw new InvalidPageNumberException(
-                    environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK")
+                    messageSource.getMessage("Service.PAGE_NUMBER_EXCEEDS_BOOK", null, LocaleContextHolder.getLocale())
             );
         };
         Note newNote = new Note();
@@ -71,7 +72,7 @@ public class NoteServiceImpl implements NoteService{
     ) {
         if(!bookRepository.existsByBookIdAndUserUserId(bookId, userId)) {
             throw new ResourceNotFoundException(
-                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                    messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
             );
         }
         Page<Note> notePages = noteRepository.findByBookBookIdAndBookUserUserId(
@@ -116,7 +117,7 @@ public class NoteServiceImpl implements NoteService{
                 noteUpdateRequestDTO.pageNumber() > foundBook.getTotalPages()
         ) {
             throw new InvalidPageNumberException(
-                    environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK")
+                    messageSource.getMessage("Service.PAGE_NUMBER_EXCEEDS_BOOK", null, LocaleContextHolder.getLocale())
             );
         };
         Note foundNote = getNoteByBookAndUser(noteId, bookId, userId);
@@ -150,7 +151,7 @@ public class NoteServiceImpl implements NoteService{
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
     };
 
@@ -161,7 +162,7 @@ public class NoteServiceImpl implements NoteService{
                 userId
         )
         .orElseThrow(() -> new ResourceNotFoundException(
-                environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
         ));
     }
 

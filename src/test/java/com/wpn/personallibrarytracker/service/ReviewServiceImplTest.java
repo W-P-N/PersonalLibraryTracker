@@ -14,7 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.mockito.ArgumentMatchers;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -30,7 +31,7 @@ public class ReviewServiceImplTest {
     @Mock
     ReviewRepository reviewRepository;
     @Mock
-    Environment environment;
+    MessageSource messageSource;
     @InjectMocks
     ReviewServiceImpl reviewService;
 
@@ -60,7 +61,7 @@ public class ReviewServiceImplTest {
     void addReview_unHappyPath_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         ReviewCreateRequestDTO request = new ReviewCreateRequestDTO("Great book", 5);
         when(bookRepository.findByBookIdAndUserUserId(1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         assertThrows(ResourceNotFoundException.class, () -> reviewService.addReview(1, 1, request));
@@ -73,7 +74,7 @@ public class ReviewServiceImplTest {
         Book book = new Book();
         when(bookRepository.findByBookIdAndUserUserId(1, 1)).thenReturn(Optional.of(book));
         when(reviewRepository.existsByBookBookId(1)).thenReturn(true);
-        when(environment.getProperty("Service.REVIEW_ALREADY_EXISTS")).thenReturn("Review exists");
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.REVIEW_ALREADY_EXISTS"), ArgumentMatchers.any(), ArgumentMatchers.any())).thenReturn("Review exists");
 
         assertThrows(ReviewAlreadyExistsException.class, () -> reviewService.addReview(1, 1, request));
         verify(reviewRepository, never()).save(any());
@@ -99,7 +100,7 @@ public class ReviewServiceImplTest {
     @Test
     void getReview_unHappyPath_shouldThrowResourceNotFoundException_whenReviewNotFound() {
         when(reviewRepository.findByBookBookIdAndBookUserUserId(1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         assertThrows(ResourceNotFoundException.class, () -> reviewService.getReview(1, 1));
@@ -128,7 +129,7 @@ public class ReviewServiceImplTest {
     void updateReview_unHappyPath_shouldThrowResourceNotFoundException_whenReviewNotFound() {
         ReviewUpdateRequestDTO request = new ReviewUpdateRequestDTO("Updated", 3);
         when(reviewRepository.findByBookBookIdAndBookUserUserId(1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         assertThrows(ResourceNotFoundException.class, () -> reviewService.updateReview(1, 1, request));
@@ -149,7 +150,7 @@ public class ReviewServiceImplTest {
     @Test
     void deleteReview_unHappyPath_shouldThrowResourceNotFoundException_whenReviewNotFound() {
         when(reviewRepository.findByBookBookIdAndBookUserUserId(1, 1)).thenReturn(Optional.empty());
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         assertThrows(ResourceNotFoundException.class, () -> reviewService.deleteReview(1, 1));

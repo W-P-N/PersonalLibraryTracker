@@ -7,7 +7,8 @@ import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.ReadingSessionRepository;
 import com.wpn.personallibrarytracker.repository.ReviewRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,20 +24,20 @@ public class StatsServiceImpl implements StatsService{
     private final BookRepository bookRepository;
     private final ReadingSessionRepository readingSessionRepository;
     private final ReviewRepository reviewRepository;
-    private final Environment environment;
+    private final MessageSource messageSource;
 
     public StatsServiceImpl(
             UserRepository userRepository,
             BookRepository bookRepository,
             ReadingSessionRepository readingSessionRepository,
             ReviewRepository reviewRepository,
-            Environment environment
+            MessageSource messageSource
     ) {
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
         this.readingSessionRepository = readingSessionRepository;
         this.reviewRepository = reviewRepository;
-        this.environment = environment;
+        this.messageSource = messageSource;
     }
 
     @Override
@@ -44,7 +45,7 @@ public class StatsServiceImpl implements StatsService{
     public StatsResponseDTO getStats(Integer userId) {
         if(!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException(
-                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                    messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
             );
         }
         Long totalBooks = bookRepository.countByUserUserId(userId);
