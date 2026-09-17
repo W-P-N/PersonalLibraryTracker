@@ -29,7 +29,7 @@ public class Book {
     private User user;
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private List<Note> notes;
-    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private Review review;
 
     @Override
