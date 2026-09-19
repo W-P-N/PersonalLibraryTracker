@@ -9,7 +9,8 @@ import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.repository.BookRepository;
 import com.wpn.personallibrarytracker.repository.UserRepository;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,16 +21,16 @@ import java.util.List;
 @Service(value = "bookService")
 public class BookServiceImpl implements BookService {
     private final UserRepository userRepository;
-    private final Environment environment;
+    private final MessageSource messageSource;
     private final BookRepository bookRepository;
 
     public BookServiceImpl(
             UserRepository userRepository,
-            Environment environment,
+            MessageSource messageSource,
             BookRepository bookRepository
     ) {
         this.userRepository = userRepository;
-        this.environment = environment;
+        this.messageSource = messageSource;
         this.bookRepository = bookRepository;
     }
 
@@ -38,21 +39,13 @@ public class BookServiceImpl implements BookService {
     public BookResponseDTO addBook(Integer userId, BookRequestDTO bookRequestDTO) {
         // Check if book already exists - business decision pending
         User foundUser = getUser(userId);
-        Book newBook = new Book();
-        newBook.setTitle(bookRequestDTO.title());
-        newBook.setAuthor(bookRequestDTO.author());
-        newBook.setIsbn(bookRequestDTO.isbn());
-        newBook.setTotalPages(bookRequestDTO.totalPages());
-        newBook.setCoverUrl(bookRequestDTO.coverUrl());
-        newBook.setUser(foundUser);
-        Book savedBook = bookRepository.save(newBook);
-        return new BookResponseDTO(
-                savedBook.getBookId(),
-                savedBook.getTitle(),
-                savedBook.getAuthor(),
-                savedBook.getIsbn(),
-                savedBook.getCoverUrl(),
-                savedBook.getTotalPages()
+        return createAndSaveBook(
+                foundUser,
+                bookRequestDTO.title(),
+                bookRequestDTO.author(),
+                bookRequestDTO.totalPages(),
+                bookRequestDTO.isbn(),
+                bookRequestDTO.coverUrl()
         );
     }
 
@@ -63,21 +56,13 @@ public class BookServiceImpl implements BookService {
             BookFromSearchRequestDTO bookFromSearchRequestDTO
     ) {
         User foundUser = getUser(userId);
-        Book newBook = new Book();
-        newBook.setTitle(bookFromSearchRequestDTO.title());
-        newBook.setAuthor(bookFromSearchRequestDTO.author());
-        newBook.setIsbn(bookFromSearchRequestDTO.isbn());
-        newBook.setTotalPages(bookFromSearchRequestDTO.totalPages());
-        newBook.setCoverUrl(bookFromSearchRequestDTO.coverUrl());
-        newBook.setUser(foundUser);
-        Book savedBook = bookRepository.save(newBook);
-        return new BookResponseDTO(
-                savedBook.getBookId(),
-                savedBook.getTitle(),
-                savedBook.getAuthor(),
-                savedBook.getIsbn(),
-                savedBook.getCoverUrl(),
-                savedBook.getTotalPages()
+        return createAndSaveBook(
+                foundUser,
+                bookFromSearchRequestDTO.title(),
+                bookFromSearchRequestDTO.author(),
+                bookFromSearchRequestDTO.totalPages(),
+                bookFromSearchRequestDTO.isbn(),
+                bookFromSearchRequestDTO.coverUrl()
         );
     }
 
@@ -89,7 +74,7 @@ public class BookServiceImpl implements BookService {
     ) {
         if(!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException(
-                    environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                    messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
             );
         }
         Page<Book> bookList = bookRepository.findByUserUserId(
@@ -113,20 +98,6 @@ public class BookServiceImpl implements BookService {
     @Transactional(readOnly = true)
     public BookDetailsResponseDTO getBookDetails(Integer userId, Integer bookId) {
         Book foundBook = getBookByUser(bookId, userId);
-        List<ReadingSessionResponseDTO> readingSessionDetailsResponseDTOList = foundBook.getReadingSessions()
-                .stream().map(readingSession -> new ReadingSessionResponseDTO(
-                        readingSession.getReadingSessionId(),
-                        readingSession.getEndSessionPageNumber(),
-                        readingSession.getSessionDateTime()
-                )).toList();
-        List<NoteResponseDTO> noteResponseDTOList = foundBook.getNotes()
-                .stream()
-                .map(note -> new NoteResponseDTO(
-                        note.getNoteId(),
-                        note.getCreatedAt(),
-                        note.getPageNumber()
-                ))
-                .toList();
         ReviewResponseDTO reviewResponseDTO = foundBook.getReview() != null ?
                 new ReviewResponseDTO(
                         foundBook.getReview().getContent(),
@@ -142,8 +113,6 @@ public class BookServiceImpl implements BookService {
                 foundBook.getTotalPages(),
                 foundBook.getIsbn(),
                 foundBook.getCoverUrl(),
-                readingSessionDetailsResponseDTOList,
-                noteResponseDTOList,
                 reviewResponseDTO
         );
     }
@@ -187,14 +156,35 @@ public class BookServiceImpl implements BookService {
     // Utility functions
     User getUser(Integer userId) {
         return userRepository.findById(userId).orElseThrow(
-                () -> new ResourceNotFoundException(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+                () -> new ResourceNotFoundException(messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale()))
         );
     };
 
     Book getBookByUser(Integer bookId, Integer userId) {
         return bookRepository.findByBookIdAndUserUserId(bookId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
     };
+    private BookResponseDTO createAndSaveBook(
+            User user,
+            String title,
+            String author,
+            Integer totalPages,
+            String isbn,
+            String coverUrl
+    ) {
+        Book newBook = new Book();
+        newBook.setTitle(title);
+        newBook.setAuthor(author);
+        newBook.setTotalPages(totalPages);
+        newBook.setIsbn(isbn);
+        newBook.setCoverUrl(coverUrl);
+        newBook.setUser(user);
+        Book savedBook = bookRepository.save(newBook);
+        return new BookResponseDTO(
+                savedBook.getBookId(), savedBook.getTitle(), savedBook.getAuthor(),
+                savedBook.getIsbn(), savedBook.getCoverUrl(), savedBook.getTotalPages()
+        );
+    }
 }

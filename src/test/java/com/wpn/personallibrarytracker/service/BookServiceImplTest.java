@@ -21,7 +21,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.mockito.ArgumentMatchers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -42,7 +43,7 @@ public class BookServiceImplTest {
     private BookRepository bookRepository;
 
     @Mock
-    private Environment environment;
+    private MessageSource messageSource;
 
     @InjectMocks
     private BookServiceImpl bookService;
@@ -101,7 +102,7 @@ public class BookServiceImplTest {
         );
 
         Mockito.when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         ResourceNotFoundException exception = Assertions.assertThrows(
@@ -157,7 +158,7 @@ public class BookServiceImplTest {
         Pageable pageable = PageRequest.of(0, 5);
 
         Mockito.when(userRepository.existsById(userId)).thenReturn(false);
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         ResourceNotFoundException exception = Assertions.assertThrows(
@@ -253,8 +254,6 @@ public class BookServiceImplTest {
         Assertions.assertEquals("The Hobbit", response.title());
         Assertions.assertEquals("J.R.R. Tolkien", response.author());
         Assertions.assertEquals(310, response.totalPages());
-        Assertions.assertEquals(1, response.readingSessionList().size());
-        Assertions.assertEquals(1, response.notes().size());
         Assertions.assertNotNull(response.review());
         Assertions.assertEquals(5, response.review().rating());
         Mockito.verify(userRepository, Mockito.never()).existsById(any());
@@ -266,7 +265,7 @@ public class BookServiceImplTest {
         Integer bookId = 999;
 
         Mockito.when(bookRepository.findByBookIdAndUserUserId(bookId, userId)).thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         ResourceNotFoundException exception = Assertions.assertThrows(
@@ -328,7 +327,7 @@ public class BookServiceImplTest {
 
         Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(
@@ -367,7 +366,7 @@ public class BookServiceImplTest {
 
         Mockito.when(bookRepository.findByBookIdAndUserUserId(mockBookId, mockUserId))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(

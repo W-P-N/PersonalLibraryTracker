@@ -10,12 +10,14 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @DataJpaTest
+@ActiveProfiles("test")
 public class ReadingSessionRepositoryTest {
     @Autowired
     private ReadingSessionRepository readingSessionRepository;

@@ -9,7 +9,10 @@ import java.util.Objects;
 
 @Entity
 @Data
-@Table(name = "books")
+@Table(
+        name = "books",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "isbn"})
+)
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +20,6 @@ public class Book {
     private String title;
     private String author;
     private Integer totalPages;
-    @Column(unique = true, nullable = true)
     private String isbn;
     private String coverUrl;
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
@@ -27,7 +29,7 @@ public class Book {
     private User user;
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL)
     private List<Note> notes;
-    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     private Review review;
 
     @Override

@@ -8,7 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.mockito.ArgumentMatchers;
 
 import com.wpn.personallibrarytracker.dto.statsDTOs.StatsResponseDTO;
 import com.wpn.personallibrarytracker.entity.Book;
@@ -47,7 +48,7 @@ public class StatsServiceImplTest {
     @Mock
     ReadingSessionRepository readingSessionRepository;
     @Mock
-    Environment environment;
+    MessageSource messageSource;
     @InjectMocks
     StatsServiceImpl statsService;
 
@@ -129,7 +130,7 @@ public class StatsServiceImplTest {
         // Arrange
         Integer userId = 999;
         when(userRepository.existsById(userId)).thenReturn(false);
-        when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         // Act & Assert

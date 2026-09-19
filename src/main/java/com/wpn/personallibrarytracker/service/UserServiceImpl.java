@@ -5,18 +5,19 @@ import com.wpn.personallibrarytracker.dto.userDTOs.UserUpdateRequestDTO;
 import com.wpn.personallibrarytracker.entity.User;
 import com.wpn.personallibrarytracker.exceptions.ResourceNotFoundException;
 import com.wpn.personallibrarytracker.repository.UserRepository;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service("userService")
 public class UserServiceImpl implements UserService {
-    private final Environment environment;
+    private final MessageSource messageSource;
     private final UserRepository userRepository;
 
-    public UserServiceImpl(UserRepository userRepository, Environment environment) {
+    public UserServiceImpl(UserRepository userRepository, MessageSource messageSource) {
         this.userRepository = userRepository;
-        this.environment = environment;
+        this.messageSource = messageSource;
     }
 
     @Override
@@ -24,7 +25,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO getUser(Integer userId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
         return new UserResponseDTO(
                 foundUser.getUserId(),
@@ -38,7 +39,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO updateUser(Integer userId, UserUpdateRequestDTO userUpdateRequestDTO) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
         foundUser.setUserName(userUpdateRequestDTO.userName());
         foundUser.setEmail(userUpdateRequestDTO.email());
@@ -54,7 +55,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Integer userId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        environment.getProperty("Service.RESOURCE_NOT_FOUND")
+                        messageSource.getMessage("Service.RESOURCE_NOT_FOUND", null, LocaleContextHolder.getLocale())
                 ));
         userRepository.delete(foundUser);
     }

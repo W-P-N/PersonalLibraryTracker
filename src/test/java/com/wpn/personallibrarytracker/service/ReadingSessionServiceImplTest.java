@@ -17,7 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
+import org.mockito.ArgumentMatchers;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,7 +60,7 @@ public class ReadingSessionServiceImplTest {
     @InjectMocks
     ReadingSessionServiceImpl readingSessionService;
     @Mock
-    Environment environment;
+    MessageSource messageSource;
 
     @Test
     void logReadingSession_shouldReturnReadingSessionResponseDTO() {
@@ -162,7 +163,7 @@ public class ReadingSessionServiceImplTest {
         ReadingSessionRequestDTO requestDTO = new ReadingSessionRequestDTO(10);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(Mockito.anyInt(), Mockito.anyInt()))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class, () -> {
@@ -193,7 +194,7 @@ public class ReadingSessionServiceImplTest {
                 .thenReturn(Optional.of(newBook));
         Mockito.when(readingSessionRepository.findTopByBookBookIdAndBookUserUserIdOrderBySessionDateTimeDesc(
                 Mockito.anyInt(), Mockito.anyInt())).thenReturn(Optional.of(previousSession));
-        Mockito.when(environment.getProperty("Service.PAGE_NUMBER_GOING_BACKWARDS"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.PAGE_NUMBER_GOING_BACKWARDS"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("Invalid page number backwards");
 
         InvalidPageNumberException exception = Assertions.assertThrows(InvalidPageNumberException.class, () -> {
@@ -218,7 +219,7 @@ public class ReadingSessionServiceImplTest {
 
         Mockito.when(bookRepository.findByBookIdAndUserUserId(Mockito.anyInt(), Mockito.anyInt()))
                 .thenReturn(Optional.of(newBook));
-        Mockito.when(environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.PAGE_NUMBER_EXCEEDS_BOOK"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("Exceeds book length");
 
         InvalidPageNumberException exception = Assertions.assertThrows(InvalidPageNumberException.class, () -> {
@@ -258,7 +259,7 @@ public class ReadingSessionServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Mockito.when(bookRepository.existsByBookIdAndUserUserId(Mockito.anyInt(), Mockito.anyInt()))
                 .thenReturn(false);
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         ResourceNotFoundException exception = Assertions.assertThrows(ResourceNotFoundException.class, () -> {
@@ -298,7 +299,7 @@ public class ReadingSessionServiceImplTest {
 
         Mockito.when(readingSessionRepository.findSessionWithComputedPages(sessionId, bookId, userId))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class,
@@ -489,7 +490,7 @@ public class ReadingSessionServiceImplTest {
         Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
                 sessionId, bookId, userId))
                 .thenReturn(Optional.of(foundReadingSession));
-        Mockito.when(environment.getProperty("Service.PAGE_NUMBER_EXCEEDS_BOOK"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.PAGE_NUMBER_EXCEEDS_BOOK"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("Page number exceeds book total pages");
 
         Assertions.assertThrows(InvalidPageNumberException.class, () ->
@@ -526,7 +527,7 @@ public class ReadingSessionServiceImplTest {
                 .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeBeforeOrderBySessionDateTimeDesc(
                         bookId, userId, foundReadingSession.getSessionDateTime()))
                 .thenReturn(Optional.of(previousSession));
-        Mockito.when(environment.getProperty("Service.PAGE_NUMBER_GOING_BACKWARDS"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.PAGE_NUMBER_GOING_BACKWARDS"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("Page number going backwards");
 
         Assertions.assertThrows(InvalidPageNumberException.class, () ->
@@ -571,7 +572,7 @@ public class ReadingSessionServiceImplTest {
                 .findFirstByBookBookIdAndBookUserUserIdAndSessionDateTimeAfterOrderBySessionDateTimeAsc(
                         bookId, userId, foundReadingSession.getSessionDateTime()))
                 .thenReturn(Optional.of(nextSession));
-        Mockito.when(environment.getProperty("Service.PAGE_NUMBER_GOING_FORWARDS"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.PAGE_NUMBER_GOING_FORWARDS"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("Page number going forwards");
 
         Assertions.assertThrows(InvalidPageNumberException.class, () ->
@@ -584,7 +585,7 @@ public class ReadingSessionServiceImplTest {
     void updateSession_unHappyPath_shouldThrowResourceNotFoundException_whenBookNotFoundForUser() {
         ReadingSessionRequestDTO requestDTO = new ReadingSessionRequestDTO(55);
         Mockito.when(bookRepository.findByBookIdAndUserUserId(10, 1)).thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class,
@@ -623,7 +624,7 @@ public class ReadingSessionServiceImplTest {
         Mockito.when(readingSessionRepository.findByReadingSessionIdAndBookBookIdAndBookUserUserId(
                 sessionId, bookId, userId))
                 .thenReturn(Optional.empty());
-        Mockito.when(environment.getProperty("Service.RESOURCE_NOT_FOUND"))
+        Mockito.when(messageSource.getMessage(ArgumentMatchers.eq("Service.RESOURCE_NOT_FOUND"), ArgumentMatchers.any(), ArgumentMatchers.any()))
                 .thenReturn("The requested resource was not found");
 
         Assertions.assertThrows(ResourceNotFoundException.class,

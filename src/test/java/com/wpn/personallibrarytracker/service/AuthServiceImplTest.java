@@ -20,7 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.env.Environment;
+import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -41,7 +41,7 @@ public class AuthServiceImplTest {
     @Mock
     TokenHasher tokenHasher;
     @Mock
-    Environment environment;
+    MessageSource messageSource;
 
     @Test
     void registerUser_happyPath_shouldReturnUserResponseDTO() {
