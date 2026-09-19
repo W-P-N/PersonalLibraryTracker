@@ -80,4 +80,4 @@ Thumbs.db
 .env.local
 application-*.properties
 application-*.yml
-!
+
